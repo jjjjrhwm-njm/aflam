@@ -1,7 +1,7 @@
 /**
  * 🚀 StreamFlix - Professional Video Streaming Platform
  * 🎬 Premium Design | Hidden YouTube References | Modern UX
- * 🔧 Fixed Mobile Autoplay Issues | Destroy & Rebuild Strategy
+ * 🔧 Fixed Mobile Autoplay Issues | Destroy & Rebuild Strategy (Final Fix)
  */
 
 const App = {
@@ -178,7 +178,7 @@ const App = {
             const player = new Plyr(videoElement, {
                 controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
                 youtube: {
-                    noCookie: true,
+                    noCookie: false, // 🔴 ضروري للجوال: يجب أن يكون false ليتعرف يوتيوب على الجلسة
                     rel: 0,
                     showinfo: 0,
                     iv_load_policy: 3,
@@ -190,10 +190,10 @@ const App = {
                 },
                 invertTime: false,
                 seekTime: 10,
-                volume: 0.8,
-                muted: true, // Start muted to help with autoplay policies
+                volume: 1,
+                muted: false, // 🔴 ترك الصوت مفعلاً لأننا أوقفنا التشغيل التلقائي
                 storage: { enabled: false },
-                autoplay: true // Request autoplay
+                autoplay: false // 🔴 الحل السحري: منع التشغيل التلقائي لتجنب الشاشة السوداء في الأندرويد
             });
             
             return player;
@@ -433,35 +433,19 @@ const App = {
         if (!newPlayer) {
             console.error('Failed to rebuild player');
             App.closePlayer();
-            App.showToast('حدث خطأ في تشغيل الفيديو', false);
+            App.showToast('حدث خطأ في تجهيز المشغل', false);
             return;
         }
         
         App.playerInstance = newPlayer;
         
-        // Set video source
+        // Set video source (لن يشتغل تلقائياً، سينتظر ضغطة المستخدم لتجاوز حظر الأندرويد)
         App.playerInstance.source = {
             type: 'video',
             sources: [{ src: ytId, provider: 'youtube' }]
         };
         
-        // Wait for player to be ready, then attempt to play
-        App.playerInstance.on('ready', () => {
-            // Attempt to play with catch for autoplay policies
-            App.playerInstance.play()
-                .catch((error) => {
-                    console.warn('Autoplay was prevented:', error);
-                    // User will need to click play button - this is normal for mobile browsers
-                    // The player UI is visible, user can manually click play
-                });
-        });
-        
-        // Unmute after user interaction with player (for better UX)
-        setTimeout(() => {
-            if (App.playerInstance && App.playerInstance.muted) {
-                // Don't force unmute - let user decide
-            }
-        }, 1000);
+        // 🔴 حذفنا كود التشغيل التلقائي المزعج الذي كان يسبب الشاشة السوداء.
     },
 
     // 16. Close Player - Clean up properly
