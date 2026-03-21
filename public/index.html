@@ -3,58 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>njmflix Pro | منصة نجم الإبداع</title>
+    <title>njmflix | منصة المشاهدة الاحترافية</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header id="appHeader">
-        <div class="header-main">
-            <div class="brand-zone">
-                <span class="logo-icon">★</span>
-                <h1 class="main-logo">njmflix</h1>
+    <header id="mainNav">
+        <div class="header-content">
+            <div class="brand">
+                <h1>njmflix</h1>
             </div>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="ابحث عن فيلم أو مسلسل..." oninput="logic.search(this.value)">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="ابحث في المكتبة..." oninput="appLogic.search(this.value)">
             </div>
         </div>
-        <nav class="category-bar">
-            <button class="cat-item active" data-type="all" onclick="logic.filter('all', this)">الكل</button>
-            <button class="cat-item" data-type="movie" onclick="logic.filter('movie', this)">الأفلام</button>
-            <button class="cat-item" data-type="series" onclick="logic.filter('series', this)">المسلسلات</button>
+        <nav class="categories">
+            <button class="cat-btn active" onclick="appLogic.filter('all', this)">الكل</button>
+            <button class="cat-btn" onclick="appLogic.filter('movie', this)">الأفلام</button>
+            <button class="cat-btn" onclick="appLogic.filter('series', this)">المسلسلات</button>
         </nav>
     </header>
 
-    <main id="mainGallery">
-        <div id="loadingState" class="status-layer">
+    <main id="appBody">
+        <div id="loading" class="loader-container">
             <div class="spinner"></div>
-            <p>جاري مزامنة المكتبة السينمائية...</p>
+            <p>جاري الاتصال بقاعدة البيانات...</p>
         </div>
-        <div class="movie-grid" id="movieGrid"></div>
+        <div class="grid-layout" id="contentGrid"></div>
     </main>
 
-    <div id="masterPlayer" class="player-overlay">
-        <div class="player-header">
-            <button class="exit-btn" onclick="ui.closePlayer()">✕ إغلاق العرض</button>
-            <span class="now-playing" id="videoTitleDisplay">جاري العرض...</span>
+    <div id="videoModal" class="fullscreen-modal">
+        <div class="modal-toolbar">
+            <span class="video-title" id="videoTitle">جاري العرض...</span>
+            <button class="close-player" onclick="appLogic.closeVideo()">إغلاق ✕</button>
         </div>
-        
-        <div class="video-universe">
-            <div class="clipping-mask">
-                <div class="my-watermark">njmflix Original</div>
-                
-                <div class="interaction-shield"></div>
-                
-                <iframe id="globalIframe" 
-                        frameborder="0" 
-                        allow="autoplay; fullscreen; picture-in-picture" 
-                        allowfullscreen>
-                </iframe>
-            </div>
+        <div class="player-wrapper">
+            <div id="customPlayer" data-plyr-provider="youtube" data-plyr-embed-id=""></div>
         </div>
     </div>
 
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
