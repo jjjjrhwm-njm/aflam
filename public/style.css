@@ -1,1 +1,194 @@
-ن
+:root {
+    --bg-color: #141414;
+    --primary-red: #E50914;
+    --text-light: #e5e5e5;
+    --card-bg: #222;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-light);
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* شريط التنقل العلوي */
+header {
+    background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(20,20,20,0.8) 100%);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+}
+
+.header-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 15px;
+}
+
+header h1 {
+    margin: 0;
+    color: var(--primary-red);
+    font-weight: 900;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+/* أزرار الأقسام */
+.categories button {
+    background: none;
+    border: none;
+    color: #888;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: color 0.3s;
+}
+
+.categories button:hover, .categories button.active {
+    color: white;
+}
+
+/* صندوق البحث */
+.search-box input {
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #444;
+    background-color: rgba(0,0,0,0.6);
+    color: white;
+    font-family: inherit;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-box input:focus {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 8px rgba(229, 9, 20, 0.4);
+}
+
+@media (min-width: 768px) {
+    .header-content { flex-wrap: nowrap; }
+    .search-box input { width: 250px; }
+    header h1 { font-size: 32px; }
+}
+
+/* شبكة عرض المحتوى */
+main {
+    padding-top: 140px; /* تعويض مساحة الهيدر في الجوال */
+    min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+    main { padding-top: 100px; }
+}
+
+.movies-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0 15px 40px 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .movies-container { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+}
+
+/* كرت الفيلم */
+.movie-card {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: var(--card-bg);
+    cursor: pointer;
+    aspect-ratio: 2 / 3;
+    transition: transform 0.3s ease;
+}
+
+.movie-card:hover {
+    transform: scale(1.03);
+    z-index: 10;
+}
+
+.movie-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* التاج (فيلم / مسلسل) */
+.tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.play-icon {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 45px; height: 45px;
+    background-color: rgba(0,0,0,0.6);
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    border: 2px solid white; opacity: 0; transition: opacity 0.3s;
+}
+
+.play-icon::after {
+    content: ''; border-style: solid; border-width: 10px 0 10px 15px;
+    border-color: transparent transparent transparent white; margin-left: 5px;
+}
+
+.movie-card:hover .play-icon { opacity: 1; }
+
+.movie-title {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+    padding: 30px 10px 10px; margin: 0;
+    font-size: 13px; font-weight: 700; text-align: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* المشغل المنبثق */
+.modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #000; z-index: 1000;
+    justify-content: center; align-items: center;
+}
+
+.modal-content { width: 100%; height: 100%; max-height: 100vh; }
+
+@media (min-width: 768px) {
+    .modal { background-color: rgba(0,0,0,0.95); }
+    .modal-content { width: 85%; height: 85%; border-radius: 10px; overflow: hidden; box-shadow: 0 0 30px rgba(229,9,20,0.2); }
+}
+
+iframe { width: 100%; height: 100%; border: none; }
+
+.close-btn {
+    position: absolute; top: 15px; right: 20px; color: white; font-size: 35px;
+    z-index: 1001; cursor: pointer; background: rgba(0,0,0,0.5); width: 40px; height: 40px;
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+}
+
+.loading { text-align: center; color: #888; font-weight: bold; font-size: 18px; }
