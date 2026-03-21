@@ -2,45 +2,36 @@ const TelegramBot = require('node-telegram-bot-api');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); // مكتبة ضرورية لتشغيل ملف الـ HTML
+const path = require('path'); 
 
 const token = process.env.BOT_TOKEN;
 const mongoURI = process.env.MONGO_URI;
 const ADMIN_ID = process.env.ADMIN_ID;
 
 const userStates = {};
-
-// إعداد البوت
 const bot = new TelegramBot(token, { polling: { autoStart: true } });
 
-// الاتصال بقاعدة البيانات
 mongoose.connect(mongoURI)
     .then(() => console.log("✅ Connected to MongoDB"))
     .catch(err => console.error("❌ MongoDB Error:", err));
 
-// هيكل البيانات المطور (أضفنا قسم المسلسلات والأفلام)
 const contentSchema = new mongoose.Schema({
     title: String,
     link: String,
     image: { type: String, default: "https://via.placeholder.com/150" },
-    category: { type: String, default: 'movie' }, // movie (فيلم) أو series (مسلسل)
+    category: { type: String, default: 'movie' }, // movie أو series
     date: { type: Date, default: Date.now }
 });
-// ربطنا الموديل بنفس الجدول القديم (movies) عشان ما تضيع بياناتك السابقة
 const Content = mongoose.model('Content', contentSchema, 'movies'); 
 
-// إعداد السيرفر
 const app = express();
 app.use(cors());
 
-// ---- القسم الجديد: استضافة واجهة "نجم فليكس" ----
-app.get('/', (req, res) => {
-    // هذا السطر يخبر السيرفر بفتح ملف index.html عند الدخول للرابط
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+// السر هنا: السيرفر الآن يعرض كل شيء داخل مجلد اسمه "public"
+app.use(express.static(path.join(__dirname, 'public')));
 
-// واجهة جلب البيانات
-app.get('/movies', async (req, res) => {
+// مسار احترافي لجلب كل المحتوى (أفلام ومسلسلات)
+app.get('/api/content', async (req, res) => {
     try {
         const items = await Content.find().sort({ date: -1 });
         res.json(items);
@@ -49,7 +40,7 @@ app.get('/movies', async (req, res) => {
     }
 });
 
-// ---- نظام حوار البوت المطور ----
+// ---- نظام حوار البوت ----
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id.toString().trim();
     const adminId = ADMIN_ID ? ADMIN_ID.toString().trim() : "";
@@ -57,7 +48,6 @@ bot.on('message', async (msg) => {
 
     if (chatId !== adminId) return;
 
-    // 1. بداية المسار (اختيار القسم)
     if (text === 'نجم نشر') {
         userStates[chatId] = { step: 'CHOOSING_CATEGORY' };
         return bot.sendMessage(chatId, "مرحباً بك يا مدير 👑\n\nاختر القسم المطلوب إضافته:\n1️⃣ - مسلسلات\n2️⃣ - أفلام");
@@ -66,14 +56,13 @@ bot.on('message', async (msg) => {
     const state = userStates[chatId];
     
     if (state) {
-        // 2. معالجة اختيار القسم
         if (state.step === 'CHOOSING_CATEGORY') {
             if (text === '1') {
-                state.category = 'series'; // حفظ كمسلسل
+                state.category = 'series'; 
                 state.step = 'CHOOSING_TYPE';
                 return bot.sendMessage(chatId, "📺 قسم المسلسلات:\n\nأرسل رقم (1) لرابط واحد.\nأرسل رقم (2) لمجموعة روابط.");
             } else if (text === '2') {
-                state.category = 'movie'; // حفظ كفيلم
+                state.category = 'movie'; 
                 state.step = 'CHOOSING_TYPE';
                 return bot.sendMessage(chatId, "🎬 قسم الأفلام:\n\nأرسل رقم (1) لرابط واحد.\nأرسل رقم (2) لمجموعة روابط.");
             } else {
@@ -81,7 +70,6 @@ bot.on('message', async (msg) => {
             }
         }
 
-        // 3. اختيار طريقة الإرسال (مفرد أو مجموعة)
         if (state.step === 'CHOOSING_TYPE') {
             if (text === '1') {
                 state.step = 'WAITING_SINGLE';
@@ -94,24 +82,19 @@ bot.on('message', async (msg) => {
             }
         }
 
-        // 4. حفظ البيانات النهائية
         if (state.step === 'WAITING_SINGLE' || state.step === 'WAITING_MULTIPLE') {
             const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-            
             if (lines.length >= 2) {
                 try {
                     const newContent = new Content({
                         link: lines[0],
                         title: lines[1],
-                        category: state.category // يتم حفظ القسم الذي اخترته هنا
+                        category: state.category 
                     });
                     await newContent.save();
-                    
                     const typeName = state.category === 'series' ? "المسلسل" : "الفيلم";
                     bot.sendMessage(chatId, `✅ تم حفظ ${typeName} "${lines[1]}" بنجاح!`);
-                    
                     if (state.step === 'WAITING_SINGLE') delete userStates[chatId];
-                    
                 } catch (error) {
                     bot.sendMessage(chatId, "❌ حدث خطأ في قاعدة البيانات أثناء الحفظ.");
                 }
@@ -122,9 +105,7 @@ bot.on('message', async (msg) => {
     }
 });
 
-// الإنهاء الآمن
 const gracefulShutdown = () => {
-    console.log("⚠️ Stopping bot polling and closing server...");
     bot.stopPolling();
     mongoose.connection.close();
     process.exit(0);
