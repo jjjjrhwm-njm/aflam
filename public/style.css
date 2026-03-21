@@ -1,194 +1,203 @@
+/* * njmflix CSS Architecture
+ * Focus: Full-bleed UI, Zero Borders, YouTube Masking
+ */
+
 :root {
-    --bg-color: #141414;
     --primary-red: #E50914;
-    --text-light: #e5e5e5;
-    --card-bg: #222;
+    --deep-black: #050505;
+    --surface-dark: #121212;
+    --glass: rgba(20, 20, 20, 0.85);
+    --text-main: #FFFFFF;
+    --text-dim: #B3B3B3;
+    --grad-black: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
 }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
+    background-color: var(--deep-black);
+    color: var(--text-main);
+    margin: 0;
     font-family: 'Cairo', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-light);
-    margin: 0;
-    padding: 0;
-    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    user-select: none;
 }
 
-/* شريط التنقل العلوي */
+/* Header & Navigation */
 header {
-    background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(20,20,20,0.8) 100%);
     position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 100;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.5);
-    backdrop-filter: blur(5px);
+    top: 0; width: 100%;
+    z-index: 1000;
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #222;
+    padding-top: env(safe-area-inset-top); /* دعم نوتش الجوال */
 }
 
-.header-content {
+.header-main {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     padding: 15px 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 15px;
 }
 
-header h1 {
-    margin: 0;
+.main-logo {
     color: var(--primary-red);
     font-weight: 900;
-    font-size: 24px;
-    letter-spacing: 1px;
+    font-size: 26px;
+    margin: 0;
+    letter-spacing: -1px;
 }
 
-/* أزرار الأقسام */
-.categories button {
-    background: none;
-    border: none;
-    color: #888;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-left: 10px;
-    transition: color 0.3s;
-}
-
-.categories button:hover, .categories button.active {
-    color: white;
-}
-
-/* صندوق البحث */
 .search-box input {
-    padding: 8px 15px;
-    border-radius: 20px;
-    border: 1px solid #444;
-    background-color: rgba(0,0,0,0.6);
+    background: #252525;
+    border: 1px solid #333;
     color: white;
-    font-family: inherit;
-    outline: none;
-    width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-family: 'Cairo';
+    width: 160px;
+    transition: 0.3s;
 }
 
-.search-box input:focus {
-    border-color: var(--primary-red);
-    box-shadow: 0 0 8px rgba(229, 9, 20, 0.4);
+.search-box input:focus { width: 220px; border-color: var(--primary-red); outline: none; }
+
+.category-bar {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 0;
 }
 
-@media (min-width: 768px) {
-    .header-content { flex-wrap: nowrap; }
-    .search-box input { width: 250px; }
-    header h1 { font-size: 32px; }
-}
-
-/* شبكة عرض المحتوى */
-main {
-    padding-top: 140px; /* تعويض مساحة الهيدر في الجوال */
-    min-height: 100vh;
-}
-
-@media (min-width: 768px) {
-    main { padding-top: 100px; }
-}
-
-.movies-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 0 15px 40px 15px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-@media (min-width: 768px) {
-    .movies-container { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-}
-
-/* كرت الفيلم */
-.movie-card {
-    position: relative;
-    border-radius: 6px;
-    overflow: hidden;
-    background-color: var(--card-bg);
+.cat-item {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 5px 10px;
     cursor: pointer;
-    aspect-ratio: 2 / 3;
-    transition: transform 0.3s ease;
 }
 
-.movie-card:hover {
-    transform: scale(1.03);
-    z-index: 10;
+.cat-item.active {
+    color: var(--text-main);
+    border-bottom: 3px solid var(--primary-red);
 }
 
-.movie-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+/* Content Grid */
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* عمودين في الجوال */
+    gap: 15px;
+    padding: 160px 15px 40px;
 }
-
-/* التاج (فيلم / مسلسل) */
-.tag {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: bold;
-    z-index: 5;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.play-icon {
-    position: absolute;
-    top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 45px; height: 45px;
-    background-color: rgba(0,0,0,0.6);
-    border-radius: 50%; display: flex; justify-content: center; align-items: center;
-    border: 2px solid white; opacity: 0; transition: opacity 0.3s;
-}
-
-.play-icon::after {
-    content: ''; border-style: solid; border-width: 10px 0 10px 15px;
-    border-color: transparent transparent transparent white; margin-left: 5px;
-}
-
-.movie-card:hover .play-icon { opacity: 1; }
-
-.movie-title {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
-    padding: 30px 10px 10px; margin: 0;
-    font-size: 13px; font-weight: 700; text-align: center;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-/* المشغل المنبثق */
-.modal {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: #000; z-index: 1000;
-    justify-content: center; align-items: center;
-}
-
-.modal-content { width: 100%; height: 100%; max-height: 100vh; }
 
 @media (min-width: 768px) {
-    .modal { background-color: rgba(0,0,0,0.95); }
-    .modal-content { width: 85%; height: 85%; border-radius: 10px; overflow: hidden; box-shadow: 0 0 30px rgba(229,9,20,0.2); }
+    .movie-grid { grid-template-columns: repeat(5, 1fr); }
 }
 
-iframe { width: 100%; height: 100%; border: none; }
-
-.close-btn {
-    position: absolute; top: 15px; right: 20px; color: white; font-size: 35px;
-    z-index: 1001; cursor: pointer; background: rgba(0,0,0,0.5); width: 40px; height: 40px;
-    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+.card {
+    background: var(--surface-dark);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 2 / 3;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.loading { text-align: center; color: #888; font-weight: bold; font-size: 18px; }
+.card:active { transform: scale(0.95); }
+
+.card img { width: 100%; height: 100%; object-fit: cover; }
+
+.card-meta {
+    position: absolute;
+    bottom: 0; width: 100%;
+    background: linear-gradient(0deg, #000 0%, transparent 100%);
+    padding: 40px 10px 10px;
+    text-align: center;
+}
+
+.card-title { font-weight: 700; font-size: 14px; margin: 0; }
+
+/* Ghost Player Engine - إخفاء يوتيوب */
+.player-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 9999;
+    flex-direction: column;
+}
+
+.player-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--grad-black);
+}
+
+.exit-btn {
+    background: var(--primary-red);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 900;
+}
+
+.video-universe {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* القص الذكي: نخرج أطراف يوتيوب خارج الحاوية */
+.clipping-mask {
+    position: relative;
+    width: 100%;
+    height: 100%; /* العرض الكامل */
+    overflow: hidden;
+}
+
+#globalIframe {
+    position: absolute;
+    /* هذه الإحداثيات تقوم بقص (Crop) الشعار والعنوان */
+    top: -15%; 
+    left: -7.5%;
+    width: 115%;
+    height: 130%;
+}
+
+.my-watermark {
+    position: absolute;
+    top: 20%;
+    right: 5%;
+    z-index: 100;
+    color: var(--primary-red);
+    font-weight: 900;
+    opacity: 0.6;
+    pointer-events: none;
+    text-shadow: 0 0 10px #000;
+}
+
+.interaction-shield {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 90;
+    pointer-events: none; /* تمنع أي تفاعل غريب */
+}
+
+.status-layer { text-align: center; padding-top: 200px; color: var(--text-dim); }
+.spinner {
+    width: 40px; height: 40px;
+    border: 4px solid #333;
+    border-top-color: var(--primary-red);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
