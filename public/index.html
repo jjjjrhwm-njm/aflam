@@ -3,55 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>njmflix | نجم فليكس</title>
+    <title>StreamFlix | منصة المشاهدة الأولى</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23E50914'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z'/></svg>">
 </head>
 <body>
 
+    <!-- Navbar متطور -->
     <header id="navbar">
         <div class="nav-container">
             <div class="brand">
-                <i class="fa-solid fa-play"></i>
-                <h1>njmflix</h1>
+                <div class="brand-logo">
+                    <i class="fa-solid fa-play"></i>
+                </div>
+                <h1>Stream<span>Flix</span></h1>
             </div>
             
             <nav class="main-nav">
-                <button class="nav-btn active" onclick="app.filterContent('all', this)">الرئيسية</button>
-                <button class="nav-btn" onclick="app.filterContent('movie', this)">الأفلام</button>
-                <button class="nav-btn" onclick="app.filterContent('series', this)">المسلسلات</button>
-                <button class="nav-btn" onclick="app.showFavorites(this)">قائمتي <i class="fa-solid fa-heart"></i></button>
+                <button class="nav-btn active" data-filter="all">
+                    <i class="fa-solid fa-house"></i>
+                    <span>الرئيسية</span>
+                </button>
+                <button class="nav-btn" data-filter="movie">
+                    <i class="fa-solid fa-film"></i>
+                    <span>الأفلام</span>
+                </button>
+                <button class="nav-btn" data-filter="series">
+                    <i class="fa-solid fa-tv"></i>
+                    <span>المسلسلات</span>
+                </button>
+                <button class="nav-btn" data-filter="favorites">
+                    <i class="fa-solid fa-heart"></i>
+                    <span>قائمتي</span>
+                </button>
             </nav>
 
             <div class="search-box">
                 <i class="fa-solid fa-search"></i>
-                <input type="text" id="searchInput" placeholder="ابحث عن العروض..." onkeyup="app.handleSearch(this.value)">
+                <input type="text" id="searchInput" placeholder="ابحث عن فيلم أو مسلسل..." autocomplete="off">
+                <div class="search-results" id="searchResults"></div>
             </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <button class="mobile-nav-btn active" data-filter="all">
+                <i class="fa-solid fa-house"></i>
+                <span>الرئيسية</span>
+            </button>
+            <button class="mobile-nav-btn" data-filter="movie">
+                <i class="fa-solid fa-film"></i>
+                <span>الأفلام</span>
+            </button>
+            <button class="mobile-nav-btn" data-filter="series">
+                <i class="fa-solid fa-tv"></i>
+                <span>المسلسلات</span>
+            </button>
+            <button class="mobile-nav-btn" data-filter="favorites">
+                <i class="fa-solid fa-heart"></i>
+                <span>قائمتي</span>
+            </button>
         </div>
     </header>
 
+    <!-- Hero Section محسن -->
     <section id="heroBanner" class="hero-section">
         <div class="hero-overlay"></div>
+        <div class="hero-gradient"></div>
         <div class="hero-content">
-            <span class="hero-badge">حصرياً أحدث الإضافات</span>
-            <h2 id="heroTitle">جاري التحميل...</h2>
-            <div class="hero-buttons">
-                <button id="heroPlayBtn" class="btn-primary"><i class="fa-solid fa-play"></i> تشغيل</button>
-                <button id="heroInfoBtn" class="btn-secondary"><i class="fa-solid fa-circle-info"></i> مزيد من المعلومات</button>
+            <div class="hero-badge">
+                <i class="fa-solid fa-star"></i>
+                <span>أحدث الإضافات</span>
             </div>
+            <h2 id="heroTitle">جاري التحميل...</h2>
+            <div class="hero-description" id="heroDescription"></div>
+            <div class="hero-buttons">
+                <button id="heroPlayBtn" class="btn-primary">
+                    <i class="fa-solid fa-play"></i>
+                    <span>تشغيل</span>
+                </button>
+                <button id="heroInfoBtn" class="btn-secondary">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>التفاصيل</span>
+                </button>
+            </div>
+        </div>
+        <div class="hero-scroll-indicator">
+            <span>مرر للأسفل</span>
+            <i class="fa-solid fa-chevron-down"></i>
         </div>
     </section>
 
     <main class="content-wrapper">
         <div class="section-header">
-            <h2 id="sectionTitle">أضيف حديثاً</h2>
+            <div class="section-title-wrapper">
+                <div class="section-icon">
+                    <i class="fa-solid fa-fire-flame-curved"></i>
+                </div>
+                <h2 id="sectionTitle">أضيف حديثاً</h2>
+            </div>
+            <div class="section-controls">
+                <button class="section-nav prev" id="sectionPrevBtn" style="display: none;">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button class="section-nav next" id="sectionNextBtn" style="display: none;">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            </div>
         </div>
         
-        <div id="skeletonLoader" class="grid-layout">
+        <div id="skeletonLoader" class="grid-layout skeleton-grid">
+            <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
@@ -62,41 +134,90 @@
         <div id="moviesGrid" class="grid-layout" style="display: none;"></div>
         
         <div id="noResults" class="empty-state" style="display: none;">
-            <i class="fa-solid fa-film"></i>
+            <div class="empty-state-icon">
+                <i class="fa-solid fa-clapperboard"></i>
+            </div>
             <h3>لا توجد نتائج!</h3>
-            <p>لم نتمكن من العثور على ما تبحث عنه.</p>
+            <p>لم نتمكن من العثور على ما تبحث عنه.<br>حاول البحث بكلمات مختلفة.</p>
         </div>
     </main>
 
+    <!-- Modal التفاصيل المحسن -->
     <div id="detailsModal" class="modal-backdrop">
         <div class="details-card">
-            <button class="close-modal" onclick="app.closeDetails()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="close-modal" id="closeDetailsBtn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <div class="details-image">
                 <img id="detailsImg" src="" alt="Poster">
                 <div class="details-img-overlay"></div>
+                <div class="details-play-overlay" id="detailsPlayOverlay">
+                    <button class="play-overlay-btn">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
             </div>
             <div class="details-info">
+                <div class="details-badges">
+                    <span class="quality-badge">
+                        <i class="fa-solid fa-circle-check"></i>
+                        HD
+                    </span>
+                    <span id="detailsCategory" class="cat-badge">
+                        <i class="fa-solid fa-tag"></i>
+                        <span>فيلم</span>
+                    </span>
+                </div>
                 <h2 id="detailsTitle">اسم الفيلم</h2>
-                <div class="details-meta">
-                    <span class="quality-badge">HD 1080p</span>
-                    <span id="detailsCategory" class="cat-badge">فيلم</span>
+                <div class="details-rating">
+                    <div class="rating-stars">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star-half-alt"></i>
+                    </div>
+                    <span class="rating-text">4.5</span>
                 </div>
                 <div class="details-actions">
-                    <button id="detailsPlayBtn" class="btn-primary w-100"><i class="fa-solid fa-play"></i> شاهد الآن</button>
-                    <button id="detailsFavBtn" class="btn-outline w-100"><i class="fa-solid fa-plus"></i> أضف لقائمتي</button>
+                    <button id="detailsPlayBtn" class="btn-primary w-100">
+                        <i class="fa-solid fa-play"></i>
+                        <span>شاهد الآن</span>
+                    </button>
+                    <button id="detailsFavBtn" class="btn-outline w-100">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>أضف لقائمتي</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Player Modal محسن -->
     <div id="playerModal" class="player-fullscreen">
         <div class="player-top-bar">
-            <button class="back-btn" onclick="app.closePlayer()"><i class="fa-solid fa-arrow-right"></i> عودة للمكتبة</button>
-            <span id="playerTitle" class="player-title"></span>
+            <button class="back-btn" id="closePlayerBtn">
+                <i class="fa-solid fa-arrow-right"></i>
+                <span>العودة للمكتبة</span>
+            </button>
+            <div class="player-info">
+                <span id="playerTitle" class="player-title"></span>
+                <span class="player-badge">جودة عالية</span>
+            </div>
         </div>
         <div class="video-container">
-            <div id="plyr-video" data-plyr-provider="youtube"></div>
+            <div id="plyr-video" class="plyr-video-player"></div>
         </div>
+        <div class="player-controls-hint">
+            <i class="fa-solid fa-expand"></i>
+            <span>شاشة كاملة</span>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="toast-notification">
+        <i class="fa-solid fa-check-circle"></i>
+        <span>تمت الإضافة إلى قائمتي</span>
     </div>
 
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
