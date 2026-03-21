@@ -1,7 +1,7 @@
 /**
  * 🚀 StreamFlix - Professional Video Streaming Platform
- * 🎬 Premium Design | Hidden YouTube References | Modern UX
- * 🔧 Fixed Mobile Autoplay Issues | Destroy & Rebuild Strategy (Final Fix)
+ * 🎬 Premium Design | Native Mobile Player | Modern UX
+ * 🔧 Removed Plyr completely for 100% Mobile Stability
  */
 
 const App = {
@@ -54,13 +54,10 @@ const App = {
         toast: document.getElementById('toastNotification')
     },
 
-    playerInstance: null,
-
     // 1. Initialization
     init: async () => {
         App.setupEventListeners();
         App.setupScrollEffect();
-        // No player initialization here - will be created on demand
         await App.fetchData();
     },
 
@@ -130,80 +127,7 @@ const App = {
         });
     },
 
-    // 3. Create Player Container Dynamically
-    createPlayerContainer: () => {
-        if (!App.elements.videoContainer) return null;
-        
-        // Clear container
-        App.elements.videoContainer.innerHTML = '';
-        
-        // Create new video element
-        const videoDiv = document.createElement('div');
-        videoDiv.id = 'plyr-video';
-        videoDiv.className = 'plyr-video-player';
-        videoDiv.setAttribute('data-plyr-provider', 'youtube');
-        
-        App.elements.videoContainer.appendChild(videoDiv);
-        return videoDiv;
-    },
-
-    // 4. Destroy and Rebuild Player (Mobile Fix)
-    rebuildPlayer: (ytId) => {
-        // Destroy existing player if exists
-        if (App.playerInstance) {
-            try {
-                App.playerInstance.destroy();
-            } catch (e) {
-                console.warn('Player destroy error:', e);
-            }
-            App.playerInstance = null;
-        }
-        
-        // Clean up any remaining YouTube iframes
-        const existingIframes = document.querySelectorAll('iframe[src*="youtube"]');
-        existingIframes.forEach(iframe => iframe.remove());
-        
-        // Create fresh container
-        App.createPlayerContainer();
-        
-        // Get the new video element
-        const videoElement = document.getElementById('plyr-video');
-        if (!videoElement) {
-            console.error('Failed to create video element');
-            return null;
-        }
-        
-        // Initialize new Plyr instance with origin parameter for mobile
-        try {
-            const player = new Plyr(videoElement, {
-                controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-                youtube: {
-                    noCookie: false, // 🔴 ضروري للجوال: يجب أن يكون false ليتعرف يوتيوب على الجلسة
-                    rel: 0,
-                    showinfo: 0,
-                    iv_load_policy: 3,
-                    modestbranding: 1,
-                    controls: 0,
-                    fs: 1,
-                    playsinline: 1,
-                    origin: window.location.origin // Critical for mobile
-                },
-                invertTime: false,
-                seekTime: 10,
-                volume: 1,
-                muted: false, // 🔴 ترك الصوت مفعلاً لأننا أوقفنا التشغيل التلقائي
-                storage: { enabled: false },
-                autoplay: false // 🔴 الحل السحري: منع التشغيل التلقائي لتجنب الشاشة السوداء في الأندرويد
-            });
-            
-            return player;
-        } catch (e) {
-            console.error('Plyr initialization error:', e);
-            return null;
-        }
-    },
-
-    // 5. Fetch Data from Server
+    // 3. Fetch Data from Server
     fetchData: async () => {
         try {
             App.state.isLoading = true;
@@ -240,20 +164,19 @@ const App = {
         }
     },
 
-    // 6. Extract YouTube ID (Hidden)
+    // 4. Extract YouTube ID (Hidden)
     extractID: (url) => {
         const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
         const match = url.match(regex);
         return match ? match[1] : null;
     },
 
-    // 7. Get Thumbnail URL
+    // 5. Get Thumbnail URL
     getThumbnail: (ytId, quality = 'maxresdefault') => {
-        // Using our own proxy or CDN to hide YouTube reference
         return `https://img.youtube.com/vi/${ytId}/${quality}.jpg`;
     },
 
-    // 8. Render Hero Section
+    // 6. Render Hero Section
     renderHero: (item) => {
         const ytId = App.extractID(item.link);
         if (!ytId) return;
@@ -266,12 +189,10 @@ const App = {
             App.elements.heroTitle.innerText = item.title;
         }
         
-        // Generate description from title
         if (App.elements.heroDescription) {
             App.elements.heroDescription.innerText = `شاهد ${item.title} بجودة عالية وحصرياً على StreamFlix. تجربة مشاهدة ممتعة مع أفضل الأفلام والمسلسلات.`;
         }
 
-        // Setup hero buttons
         if (App.elements.heroPlayBtn) {
             App.elements.heroPlayBtn.onclick = () => App.playVideo(ytId, item.title);
         }
@@ -282,7 +203,7 @@ const App = {
         App.state.currentHeroItem = item;
     },
 
-    // 9. Render Grid
+    // 7. Render Grid
     renderGrid: (items) => {
         if (!App.elements.grid) return;
         
@@ -315,13 +236,13 @@ const App = {
         });
     },
 
-    // 10. Truncate Text
+    // 8. Truncate Text
     truncateText: (text, maxLength) => {
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     },
 
-    // 11. Open Details Modal
+    // 9. Open Details Modal
     openDetails: (item) => {
         const ytId = App.extractID(item.link);
         const isFav = App.state.favorites.some(f => f._id === item._id);
@@ -337,7 +258,6 @@ const App = {
             App.elements.detailsCategory.innerHTML = `<i class="fa-solid fa-tag"></i><span>${categoryText}</span>`;
         }
         
-        // Setup favorite button
         if (App.elements.detailsFavBtn) {
             App.elements.detailsFavBtn.innerHTML = isFav ? 
                 '<i class="fa-solid fa-check"></i><span>في قائمتي</span>' : 
@@ -345,7 +265,6 @@ const App = {
             App.elements.detailsFavBtn.onclick = () => App.toggleFavorite(item);
         }
         
-        // Setup play button
         if (App.elements.detailsPlayBtn && ytId) {
             App.elements.detailsPlayBtn.onclick = () => {
                 App.closeDetails();
@@ -358,14 +277,14 @@ const App = {
         document.body.style.overflow = 'hidden';
     },
 
-    // 12. Close Details Modal
+    // 10. Close Details Modal
     closeDetails: () => {
         App.elements.detailsModal?.classList.remove('show');
         document.body.style.overflow = 'auto';
         App.state.currentItem = null;
     },
 
-    // 13. Toggle Favorite with Toast
+    // 11. Toggle Favorite
     toggleFavorite: (item) => {
         const index = App.state.favorites.findIndex(f => f._id === item._id);
         let message = '';
@@ -387,13 +306,12 @@ const App = {
         localStorage.setItem('streamflix_favorites', JSON.stringify(App.state.favorites));
         App.showToast(message, index === -1);
         
-        // Update grid if in favorites view
         if (App.state.currentCategory === 'favorites') {
             App.renderGrid(App.state.favorites);
         }
     },
 
-    // 14. Show Toast Notification
+    // 12. Show Toast Notification
     showToast: (message, isSuccess = true) => {
         const toast = App.elements.toast;
         if (!toast) return;
@@ -413,12 +331,10 @@ const App = {
         }, 3000);
     },
 
-    // 15. Play Video - DESTROY & REBUILD Strategy (Mobile Fix)
+    // 13. Play Video - Pure Native HTML5 Iframe (100% Stable)
     playVideo: (ytId, title) => {
-        // Store current video ID
         App.state.currentVideoId = ytId;
         
-        // Show modal and lock scroll
         document.body.style.overflow = 'hidden';
         if (App.elements.playerTitle) {
             App.elements.playerTitle.innerText = title;
@@ -427,64 +343,37 @@ const App = {
             App.elements.playerModal.style.display = 'flex';
         }
         
-        // CRITICAL: Destroy old player and rebuild fresh
-        const newPlayer = App.rebuildPlayer(ytId);
-        
-        if (!newPlayer) {
-            console.error('Failed to rebuild player');
-            App.closePlayer();
-            App.showToast('حدث خطأ في تجهيز المشغل', false);
-            return;
+        // حقن المشغل المباشر بدون أي مكتبات خارجية لتجنب الشاشة السوداء نهائياً
+        if (App.elements.videoContainer) {
+            App.elements.videoContainer.innerHTML = `
+                <iframe 
+                    src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&controls=1&showinfo=0&iv_load_policy=3&playsinline=1" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    style="width: 100%; height: 100%; border-radius: 8px; background: #000;"
+                ></iframe>
+            `;
         }
-        
-        App.playerInstance = newPlayer;
-        
-        // Set video source (لن يشتغل تلقائياً، سينتظر ضغطة المستخدم لتجاوز حظر الأندرويد)
-        App.playerInstance.source = {
-            type: 'video',
-            sources: [{ src: ytId, provider: 'youtube' }]
-        };
-        
-        // 🔴 حذفنا كود التشغيل التلقائي المزعج الذي كان يسبب الشاشة السوداء.
     },
 
-    // 16. Close Player - Clean up properly
+    // 14. Close Player - Clean up immediately
     closePlayer: () => {
-        // Restore scroll
         document.body.style.overflow = 'auto';
         
-        // Destroy player instance to clean up YouTube iframe
-        if (App.playerInstance) {
-            try {
-                // Stop video first
-                App.playerInstance.stop();
-                // Then destroy
-                App.playerInstance.destroy();
-            } catch (e) {
-                console.warn('Player destroy error:', e);
-            }
-            App.playerInstance = null;
-        }
-        
-        // Clean up any remaining YouTube iframes
-        const existingIframes = document.querySelectorAll('iframe[src*="youtube"]');
-        existingIframes.forEach(iframe => iframe.remove());
-        
-        // Clear video container
+        // تنظيف محتوى المشغل بالكامل لضمان إيقاف الصوت وتنظيف الذاكرة
         if (App.elements.videoContainer) {
             App.elements.videoContainer.innerHTML = '';
         }
         
-        // Hide modal
         if (App.elements.playerModal) {
             App.elements.playerModal.style.display = 'none';
         }
         
-        // Clear current video ID
         App.state.currentVideoId = null;
     },
 
-    // 17. Filter Content
+    // 15. Filter Content
     filterContent: (type, btn) => {
         App.updateNavButtons(btn);
         App.state.currentCategory = type;
@@ -502,7 +391,7 @@ const App = {
         }
     },
 
-    // 18. Show Favorites
+    // 16. Show Favorites
     showFavorites: (btn) => {
         App.updateNavButtons(btn);
         App.state.currentCategory = 'favorites';
@@ -513,7 +402,7 @@ const App = {
         App.renderGrid(App.state.favorites);
     },
 
-    // 19. Handle Search
+    // 17. Handle Search
     handleSearch: (query) => {
         App.state.currentSearchQuery = query;
         const q = query.toLowerCase().trim();
@@ -532,7 +421,7 @@ const App = {
         App.renderGrid(results);
     },
 
-    // 20. Update Nav Buttons
+    // 18. Update Nav Buttons
     updateNavButtons: (activeBtn) => {
         document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(b => {
             b.classList.remove('active');
@@ -540,13 +429,13 @@ const App = {
         activeBtn.classList.add('active');
     },
 
-    // 21. Show Empty State
+    // 19. Show Empty State
     showEmptyState: () => {
         if (App.elements.grid) App.elements.grid.style.display = 'none';
         if (App.elements.noResults) App.elements.noResults.style.display = 'block';
     },
 
-    // 22. Setup Scroll Effect
+    // 20. Setup Scroll Effect
     setupScrollEffect: () => {
         window.addEventListener('scroll', () => {
             if (App.elements.navbar) {
