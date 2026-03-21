@@ -2,36 +2,56 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نجم فليكس | Najm Flex</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>njmflix Pro | منصة نجم الإبداع</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <h1>نجم فليكس</h1>
-            <nav class="categories">
-                <button class="active" onclick="filterContent('all', this)">الكل</button>
-                <button onclick="filterContent('movie', this)">الأفلام</button>
-                <button onclick="filterContent('series', this)">المسلسلات</button>
-            </nav>
+
+    <header id="appHeader">
+        <div class="header-main">
+            <div class="brand-zone">
+                <span class="logo-icon">★</span>
+                <h1 class="main-logo">njmflix</h1>
+            </div>
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="ابحث عن فيلم أو مسلسل..." onkeyup="searchContent()">
+                <input type="text" id="searchInput" placeholder="ابحث عن فيلم أو مسلسل..." oninput="logic.search(this.value)">
             </div>
         </div>
+        <nav class="category-bar">
+            <button class="cat-item active" data-type="all" onclick="logic.filter('all', this)">الكل</button>
+            <button class="cat-item" data-type="movie" onclick="logic.filter('movie', this)">الأفلام</button>
+            <button class="cat-item" data-type="series" onclick="logic.filter('series', this)">المسلسلات</button>
+        </nav>
     </header>
 
-    <main>
-        <div id="loading" class="loading">جاري جلب المحتوى من القاعدة... ⏳</div>
-        <div class="movies-container" id="movies-container">
-            </div>
+    <main id="mainGallery">
+        <div id="loadingState" class="status-layer">
+            <div class="spinner"></div>
+            <p>جاري مزامنة المكتبة السينمائية...</p>
+        </div>
+        <div class="movie-grid" id="movieGrid"></div>
     </main>
 
-    <div id="videoModal" class="modal">
-        <div class="close-btn" onclick="closePlayer()">&times;</div>
-        <div class="modal-content">
-            <iframe id="videoPlayer" allow="autoplay; fullscreen" allowfullscreen></iframe>
+    <div id="masterPlayer" class="player-overlay">
+        <div class="player-header">
+            <button class="exit-btn" onclick="ui.closePlayer()">✕ إغلاق العرض</button>
+            <span class="now-playing" id="videoTitleDisplay">جاري العرض...</span>
+        </div>
+        
+        <div class="video-universe">
+            <div class="clipping-mask">
+                <div class="my-watermark">njmflix Original</div>
+                
+                <div class="interaction-shield"></div>
+                
+                <iframe id="globalIframe" 
+                        frameborder="0" 
+                        allow="autoplay; fullscreen; picture-in-picture" 
+                        allowfullscreen>
+                </iframe>
+            </div>
         </div>
     </div>
 
