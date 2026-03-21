@@ -3,46 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>njmflix | منصة المشاهدة الاحترافية</title>
+    <title>njmflix | نجم فليكس</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header id="mainNav">
-        <div class="header-content">
+    <header id="navbar">
+        <div class="nav-container">
             <div class="brand">
+                <i class="fa-solid fa-play"></i>
                 <h1>njmflix</h1>
             </div>
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="ابحث في المكتبة..." oninput="appLogic.search(this.value)">
+            
+            <nav class="main-nav">
+                <button class="nav-btn active" onclick="app.filterContent('all', this)">الرئيسية</button>
+                <button class="nav-btn" onclick="app.filterContent('movie', this)">الأفلام</button>
+                <button class="nav-btn" onclick="app.filterContent('series', this)">المسلسلات</button>
+                <button class="nav-btn" onclick="app.showFavorites(this)">قائمتي <i class="fa-solid fa-heart"></i></button>
+            </nav>
+
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchInput" placeholder="ابحث عن العروض..." onkeyup="app.handleSearch(this.value)">
             </div>
         </div>
-        <nav class="categories">
-            <button class="cat-btn active" onclick="appLogic.filter('all', this)">الكل</button>
-            <button class="cat-btn" onclick="appLogic.filter('movie', this)">الأفلام</button>
-            <button class="cat-btn" onclick="appLogic.filter('series', this)">المسلسلات</button>
-        </nav>
     </header>
 
-    <main id="appBody">
-        <div id="loading" class="loader-container">
-            <div class="spinner"></div>
-            <p>جاري الاتصال بقاعدة البيانات...</p>
+    <section id="heroBanner" class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-badge">حصرياً أحدث الإضافات</span>
+            <h2 id="heroTitle">جاري التحميل...</h2>
+            <div class="hero-buttons">
+                <button id="heroPlayBtn" class="btn-primary"><i class="fa-solid fa-play"></i> تشغيل</button>
+                <button id="heroInfoBtn" class="btn-secondary"><i class="fa-solid fa-circle-info"></i> مزيد من المعلومات</button>
+            </div>
         </div>
-        <div class="grid-layout" id="contentGrid"></div>
+    </section>
+
+    <main class="content-wrapper">
+        <div class="section-header">
+            <h2 id="sectionTitle">أضيف حديثاً</h2>
+        </div>
+        
+        <div id="skeletonLoader" class="grid-layout">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
+
+        <div id="moviesGrid" class="grid-layout" style="display: none;"></div>
+        
+        <div id="noResults" class="empty-state" style="display: none;">
+            <i class="fa-solid fa-film"></i>
+            <h3>لا توجد نتائج!</h3>
+            <p>لم نتمكن من العثور على ما تبحث عنه.</p>
+        </div>
     </main>
 
-    <div id="videoModal" class="fullscreen-modal">
-        <div class="modal-toolbar">
-            <span class="video-title" id="videoTitle">جاري العرض...</span>
-            <button class="close-player" onclick="appLogic.closeVideo()">إغلاق ✕</button>
+    <div id="detailsModal" class="modal-backdrop">
+        <div class="details-card">
+            <button class="close-modal" onclick="app.closeDetails()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="details-image">
+                <img id="detailsImg" src="" alt="Poster">
+                <div class="details-img-overlay"></div>
+            </div>
+            <div class="details-info">
+                <h2 id="detailsTitle">اسم الفيلم</h2>
+                <div class="details-meta">
+                    <span class="quality-badge">HD 1080p</span>
+                    <span id="detailsCategory" class="cat-badge">فيلم</span>
+                </div>
+                <div class="details-actions">
+                    <button id="detailsPlayBtn" class="btn-primary w-100"><i class="fa-solid fa-play"></i> شاهد الآن</button>
+                    <button id="detailsFavBtn" class="btn-outline w-100"><i class="fa-solid fa-plus"></i> أضف لقائمتي</button>
+                </div>
+            </div>
         </div>
-        <div class="player-wrapper">
-            <div id="customPlayer" data-plyr-provider="youtube" data-plyr-embed-id=""></div>
+    </div>
+
+    <div id="playerModal" class="player-fullscreen">
+        <div class="player-top-bar">
+            <button class="back-btn" onclick="app.closePlayer()"><i class="fa-solid fa-arrow-right"></i> عودة للمكتبة</button>
+            <span id="playerTitle" class="player-title"></span>
+        </div>
+        <div class="video-container">
+            <div id="plyr-video" data-plyr-provider="youtube"></div>
         </div>
     </div>
 
