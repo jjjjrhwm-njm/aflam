@@ -1,99 +1,111 @@
-let allContent = []; // متغير لتخزين كل البيانات محلياً للبحث والفلترة
+/**
+ * njmflix Logic Core V4.0
+ * Deep path tracking and Dynamic Rendering
+ */
 
-// السيرفر والواجهة الآن في نفس المكان، نستخدم المسار النسبي!
-const API_URL = '/api/content'; 
+const state = {
+    allContent: [],
+    filteredContent: []
+};
 
-const container = document.getElementById('movies-container');
-const loadingDiv = document.getElementById('loading');
-const modal = document.getElementById('videoModal');
-const videoPlayer = document.getElementById('videoPlayer');
+const ui = {
+    grid: document.getElementById('movieGrid'),
+    loader: document.getElementById('loadingState'),
+    player: document.getElementById('masterPlayer'),
+    iframe: document.getElementById('globalIframe'),
+    titleDisplay: document.getElementById('videoTitleDisplay'),
 
-// استخراج كود يوتيوب
-function getYouTubeId(url) {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-}
-
-// تشغيل الفيديو
-function playMovie(ytId) {
-    const embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&modestbranding=1&rel=0&showinfo=0&fs=1`;
-    videoPlayer.src = embedUrl;
-    modal.style.display = 'flex';
-}
-
-// إغلاق المشغل وإيقاف الصوت
-function closePlayer() {
-    modal.style.display = 'none';
-    videoPlayer.src = ''; 
-}
-
-// دالة بناء الكروت
-function renderCards(data) {
-    container.innerHTML = ''; 
-
-    if(data.length === 0) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#888;">لا توجد نتائج مطابقة.</p>';
-        return;
-    }
-
-    data.forEach(item => {
-        const ytId = getYouTubeId(item.link);
-        if (!ytId) return;
-
-        const imageUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-        const card = document.createElement('div');
-        card.className = 'movie-card';
-        card.onclick = () => playMovie(ytId);
-        
-        // تحديد نوع التاج واللون بناءً على القسم من قاعدة البيانات
-        const tagText = item.category === 'series' ? 'مسلسل' : 'فيلم';
-        const tagColor = item.category === 'series' ? '#0071eb' : '#E50914';
-
-        card.innerHTML = `
-            <div class="tag" style="background-color: ${tagColor}">${tagText}</div>
-            <img src="${imageUrl}" alt="${item.title}">
-            <div class="play-icon"></div>
-            <h3 class="movie-title">${item.title}</h3>
-        `;
-        container.appendChild(card);
-    });
-}
-
-// جلب البيانات من السيرفر عند فتح التطبيق
-async function fetchContent() {
-    try {
-        const response = await fetch(API_URL);
-        allContent = await response.json(); 
-        loadingDiv.style.display = 'none';
-        renderCards(allContent); 
-    } catch (error) {
-        loadingDiv.innerHTML = '❌ عذراً، فشل الاتصال بقاعدة البيانات.';
-    }
-}
-
-// الفلترة بالقسم (مسلسلات / أفلام)
-function filterContent(category, btnElement) {
-    // تفعيل الزر المضغوط وتغيير لونه
-    document.querySelectorAll('.categories button').forEach(btn => btn.classList.remove('active'));
-    btnElement.classList.add('active');
-
-    if (category === 'all') {
-        renderCards(allContent);
-    } else {
-        const filtered = allContent.filter(item => item.category === category);
-        renderCards(filtered);
-    }
-}
-
-// البحث
-function searchContent() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const searched = allContent.filter(item => item.title.toLowerCase().includes(query));
+    showLoader: (show) => ui.loader.style.display = show ? 'block' : 'none',
     
-    document.querySelectorAll('.categories button').forEach(btn => btn.classList.remove('active'));
-    renderCards(searched);
-}
+    openPlayer: (id, title) => {
+        // منع التمرير في الخلفية
+        document.body.style.overflow = 'hidden';
+        ui.titleDisplay.innerText = title;
+        
+        // بناء رابط يوتيوب "نظيف" بقدر الإمكان قبل تقنية القص
+        const cleanURL = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&controls=1&showinfo=0&disablekb=1&fs=0`;
+        
+        ui.iframe.src = cleanURL;
+        ui.player.style.display = 'flex';
+    },
 
-// بدء التشغيل
-fetchContent();
+    closePlayer: () => {
+        document.body.style.overflow = 'auto';
+        ui.iframe.src = '';
+        ui.player.style.display = 'none';
+    }
+};
+
+const logic = {
+    // جلب البيانات من السيرفر (Path: /api/content)
+    init: async () => {
+        try {
+            const response = await fetch('/api/content');
+            const result = await response.json();
+            
+            // التعامل مع الـ Lean Object المرسل من السيرفر V4
+            state.allContent = result.data || [];
+            ui.showLoader(false);
+            logic.render(state.allContent);
+        } catch (error) {
+            console.error('Core Logic Failure:', error);
+            ui.loader.innerHTML = '<p style="color:red">فشل الاتصال بالنظام السحابي.</p>';
+        }
+    },
+
+    // معالجة الروابط واستخراج الـ ID
+    parseYoutubeId: (url) => {
+        const regex = /(?:v=|be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    },
+
+    // رسم البطاقات في الواجهة
+    render: (items) => {
+        ui.grid.innerHTML = '';
+        items.forEach(item => {
+            const ytId = logic.parseYoutubeId(item.link);
+            if (!ytId) return;
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => ui.openPlayer(ytId, item.title);
+            
+            card.innerHTML = `
+                <img src="https://img.youtube.com/vi/${ytId}/maxresdefault.jpg" 
+                     onerror="this.src='https://img.youtube.com/vi/${ytId}/hqdefault.jpg'" 
+                     loading="lazy">
+                <div class="card-meta">
+                    <p class="card-title">${item.title}</p>
+                </div>
+            `;
+            ui.grid.appendChild(card);
+        });
+    },
+
+    // نظام البحث الفوري
+    search: (query) => {
+        const q = query.toLowerCase();
+        const results = state.allContent.filter(i => 
+            i.title.toLowerCase().includes(q)
+        );
+        logic.render(results);
+    },
+
+    // نظام الفلترة (أفلام/مسلسلات)
+    filter: (category, btn) => {
+        // تحديث شكل الأزرار
+        document.querySelectorAll('.cat-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (category === 'all') {
+            logic.render(state.allContent);
+        } else {
+            const results = state.allContent.filter(i => i.category === category);
+            logic.render(results);
+        }
+    }
+};
+
+// بدء تشغيل المحرك
+window.onload = logic.init;
