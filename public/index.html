@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>StreamFlix | منصة المشاهدة الأولى</title>
+    <title>StreamFlix Pro | منصة المشاهدة الأسطورية</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <link rel="stylesheet" href="style.css">
@@ -15,14 +16,22 @@
 </head>
 <body>
 
-    <!-- Navbar متطور -->
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-text">StreamFlix Pro</div>
+        </div>
+    </div>
+
+    <!-- Premium Navbar -->
     <header id="navbar">
         <div class="nav-container">
             <div class="brand">
                 <div class="brand-logo">
                     <i class="fa-solid fa-play"></i>
                 </div>
-                <h1>Stream<span>Flix</span></h1>
+                <h1>Stream<span>Flix</span><span class="pro-badge">PRO</span></h1>
             </div>
             
             <nav class="main-nav">
@@ -38,6 +47,10 @@
                     <i class="fa-solid fa-tv"></i>
                     <span>المسلسلات</span>
                 </button>
+                <button class="nav-btn" data-filter="anime">
+                    <i class="fa-solid fa-dragon"></i>
+                    <span>الأنمي</span>
+                </button>
                 <button class="nav-btn" data-filter="favorites">
                     <i class="fa-solid fa-heart"></i>
                     <span>قائمتي</span>
@@ -46,8 +59,14 @@
 
             <div class="search-box">
                 <i class="fa-solid fa-search"></i>
-                <input type="text" id="searchInput" placeholder="ابحث عن فيلم أو مسلسل..." autocomplete="off">
+                <input type="text" id="searchInput" placeholder="ابحث عن فيلم، مسلسل، أنمي..." autocomplete="off">
                 <div class="search-results" id="searchResults"></div>
+            </div>
+
+            <div class="user-menu">
+                <button class="user-btn" id="userMenuBtn">
+                    <i class="fa-solid fa-user"></i>
+                </button>
             </div>
 
             <button class="mobile-menu-btn" id="mobileMenuBtn">
@@ -57,72 +76,128 @@
         
         <!-- Mobile Menu -->
         <div class="mobile-menu" id="mobileMenu">
-            <button class="mobile-nav-btn active" data-filter="all">
-                <i class="fa-solid fa-house"></i>
-                <span>الرئيسية</span>
-            </button>
-            <button class="mobile-nav-btn" data-filter="movie">
-                <i class="fa-solid fa-film"></i>
-                <span>الأفلام</span>
-            </button>
-            <button class="mobile-nav-btn" data-filter="series">
-                <i class="fa-solid fa-tv"></i>
-                <span>المسلسلات</span>
-            </button>
-            <button class="mobile-nav-btn" data-filter="favorites">
-                <i class="fa-solid fa-heart"></i>
-                <span>قائمتي</span>
-            </button>
+            <div class="mobile-menu-header">
+                <div class="brand-logo small">
+                    <i class="fa-solid fa-play"></i>
+                </div>
+                <h3>StreamFlix Pro</h3>
+                <button class="close-mobile-menu" id="closeMobileMenu">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="mobile-menu-links">
+                <button class="mobile-nav-btn active" data-filter="all">
+                    <i class="fa-solid fa-house"></i>
+                    <span>الرئيسية</span>
+                </button>
+                <button class="mobile-nav-btn" data-filter="movie">
+                    <i class="fa-solid fa-film"></i>
+                    <span>الأفلام</span>
+                </button>
+                <button class="mobile-nav-btn" data-filter="series">
+                    <i class="fa-solid fa-tv"></i>
+                    <span>المسلسلات</span>
+                </button>
+                <button class="mobile-nav-btn" data-filter="anime">
+                    <i class="fa-solid fa-dragon"></i>
+                    <span>الأنمي</span>
+                </button>
+                <button class="mobile-nav-btn" data-filter="favorites">
+                    <i class="fa-solid fa-heart"></i>
+                    <span>قائمتي</span>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- Hero Section محسن -->
+    <!-- Hero Banner Premium -->
     <section id="heroBanner" class="hero-section">
         <div class="hero-overlay"></div>
         <div class="hero-gradient"></div>
         <div class="hero-content">
             <div class="hero-badge">
-                <i class="fa-solid fa-star"></i>
-                <span>أحدث الإضافات</span>
+                <i class="fa-solid fa-crown"></i>
+                <span>الأكثر مشاهدة</span>
             </div>
             <h2 id="heroTitle">جاري التحميل...</h2>
+            <div class="hero-meta">
+                <span class="hero-year" id="heroYear"></span>
+                <span class="hero-quality" id="heroQuality"></span>
+                <span class="hero-duration" id="heroDuration"></span>
+                <span class="hero-rating">
+                    <i class="fa-solid fa-star"></i>
+                    <span id="heroRating"></span>
+                </span>
+            </div>
             <div class="hero-description" id="heroDescription"></div>
             <div class="hero-buttons">
                 <button id="heroPlayBtn" class="btn-primary">
                     <i class="fa-solid fa-play"></i>
-                    <span>تشغيل</span>
+                    <span>تشغيل الآن</span>
                 </button>
                 <button id="heroInfoBtn" class="btn-secondary">
                     <i class="fa-solid fa-circle-info"></i>
                     <span>التفاصيل</span>
                 </button>
+                <button id="heroFavBtn" class="btn-outline">
+                    <i class="fa-regular fa-heart"></i>
+                    <span>أضف لقائمتي</span>
+                </button>
             </div>
         </div>
         <div class="hero-scroll-indicator">
-            <span>مرر للأسفل</span>
+            <span>اكتشف المزيد</span>
             <i class="fa-solid fa-chevron-down"></i>
         </div>
     </section>
 
+    <!-- Announcements Bar -->
+    <div id="announcementBar" class="announcement-bar" style="display: none;">
+        <div class="announcement-content">
+            <i class="fa-solid fa-bullhorn"></i>
+            <span id="announcementText"></span>
+        </div>
+        <button class="close-announcement" id="closeAnnouncement">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
     <main class="content-wrapper">
-        <div class="section-header">
-            <div class="section-title-wrapper">
-                <div class="section-icon">
-                    <i class="fa-solid fa-fire-flame-curved"></i>
-                </div>
-                <h2 id="sectionTitle">أضيف حديثاً</h2>
-            </div>
-            <div class="section-controls">
-                <button class="section-nav prev" id="sectionPrevBtn" style="display: none;">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-                <button class="section-nav next" id="sectionNextBtn" style="display: none;">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-            </div>
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+            <button class="cat-tab active" data-genre="all">
+                <i class="fa-solid fa-fire"></i>
+                <span>الكل</span>
+            </button>
+            <button class="cat-tab" data-genre="أكشن">
+                <i class="fa-solid fa-fist-raised"></i>
+                <span>أكشن</span>
+            </button>
+            <button class="cat-tab" data-genre="دراما">
+                <i class="fa-solid fa-mask"></i>
+                <span>دراما</span>
+            </button>
+            <button class="cat-tab" data-genre="كوميديا">
+                <i class="fa-solid fa-face-laugh"></i>
+                <span>كوميديا</span>
+            </button>
+            <button class="cat-tab" data-genre="رعب">
+                <i class="fa-solid fa-ghost"></i>
+                <span>رعب</span>
+            </button>
+            <button class="cat-tab" data-genre="خيال علمي">
+                <i class="fa-solid fa-rocket"></i>
+                <span>خيال علمي</span>
+            </button>
+            <button class="cat-tab" data-genre="أنمي">
+                <i class="fa-solid fa-dragon"></i>
+                <span>أنمي</span>
+            </button>
         </div>
         
         <div id="skeletonLoader" class="grid-layout skeleton-grid">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
@@ -140,9 +215,62 @@
             <h3>لا توجد نتائج!</h3>
             <p>لم نتمكن من العثور على ما تبحث عنه.<br>حاول البحث بكلمات مختلفة.</p>
         </div>
+
+        <!-- Load More Button -->
+        <div id="loadMoreContainer" class="load-more-container" style="display: none;">
+            <button id="loadMoreBtn" class="load-more-btn">
+                <i class="fa-solid fa-arrow-down"></i>
+                <span>تحميل المزيد</span>
+            </button>
+        </div>
     </main>
 
-    <!-- Modal التفاصيل المحسن -->
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fa-solid fa-play"></i>
+                    <h2>Stream<span>Flix</span><span class="pro-badge">PRO</span></h2>
+                </div>
+                <p>منصة المشاهدة الأولى عربياً. استمتع بأفضل المحتوى الحصري بجودة عالية.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-telegram"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>روابط سريعة</h3>
+                <ul>
+                    <li><a href="#">الأفلام</a></li>
+                    <li><a href="#">المسلسلات</a></li>
+                    <li><a href="#">الأنمي</a></li>
+                    <li><a href="#">الأكثر مشاهدة</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>معلومات</h3>
+                <ul>
+                    <li><a href="#">عن المنصة</a></li>
+                    <li><a href="#">سياسة الخصوصية</a></li>
+                    <li><a href="#">شروط الاستخدام</a></li>
+                    <li><a href="#">اتصل بنا</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>تواصل معنا</h3>
+                <p><i class="fas fa-envelope"></i> support@streamflix.com</p>
+                <p><i class="fas fa-phone"></i> +966 123 456 789</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 StreamFlix Pro. جميع الحقوق محفوظة.</p>
+        </div>
+    </footer>
+
+    <!-- Details Modal -->
     <div id="detailsModal" class="modal-backdrop">
         <div class="details-card">
             <button class="close-modal" id="closeDetailsBtn">
@@ -159,33 +287,52 @@
             </div>
             <div class="details-info">
                 <div class="details-badges">
-                    <span class="quality-badge">
+                    <span class="quality-badge" id="detailsQuality">
                         <i class="fa-solid fa-circle-check"></i>
                         HD
                     </span>
-                    <span id="detailsCategory" class="cat-badge">
-                        <i class="fa-solid fa-tag"></i>
-                        <span>فيلم</span>
+                    <span class="year-badge" id="detailsYear">
+                        <i class="fa-regular fa-calendar"></i>
+                        2024
+                    </span>
+                    <span class="duration-badge" id="detailsDuration">
+                        <i class="fa-regular fa-clock"></i>
+                        120 دقيقة
                     </span>
                 </div>
                 <h2 id="detailsTitle">اسم الفيلم</h2>
+                <div class="details-meta">
+                    <span class="director" id="detailsDirector">
+                        <i class="fa-solid fa-user"></i>
+                        المخرج: -
+                    </span>
+                    <span class="cast" id="detailsCast">
+                        <i class="fa-solid fa-users"></i>
+                        الممثلين: -
+                    </span>
+                </div>
                 <div class="details-rating">
                     <div class="rating-stars">
                         <i class="fa-solid fa-star"></i>
                         <i class="fa-solid fa-star"></i>
                         <i class="fa-solid fa-star"></i>
                         <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star-half-alt"></i>
+                        <i class="fa-regular fa-star"></i>
                     </div>
-                    <span class="rating-text">4.5</span>
+                    <span class="rating-text" id="detailsRating">4.0</span>
+                    <span class="views-count" id="detailsViews">
+                        <i class="fa-regular fa-eye"></i>
+                        0 مشاهدة
+                    </span>
                 </div>
+                <p class="details-description" id="detailsDescription"></p>
                 <div class="details-actions">
                     <button id="detailsPlayBtn" class="btn-primary w-100">
                         <i class="fa-solid fa-play"></i>
                         <span>شاهد الآن</span>
                     </button>
                     <button id="detailsFavBtn" class="btn-outline w-100">
-                        <i class="fa-solid fa-plus"></i>
+                        <i class="fa-regular fa-heart"></i>
                         <span>أضف لقائمتي</span>
                     </button>
                 </div>
@@ -193,7 +340,7 @@
         </div>
     </div>
 
-    <!-- Player Modal محسن -->
+    <!-- Player Modal -->
     <div id="playerModal" class="player-fullscreen">
         <div class="player-top-bar">
             <button class="back-btn" id="closePlayerBtn">
@@ -208,10 +355,6 @@
         <div class="video-container">
             <div id="plyr-video" class="plyr-video-player"></div>
         </div>
-        <div class="player-controls-hint">
-            <i class="fa-solid fa-expand"></i>
-            <span>شاشة كاملة</span>
-        </div>
     </div>
 
     <!-- Toast Notification -->
@@ -221,6 +364,7 @@
     </div>
 
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="script.js"></script>
 </body>
 </html>
