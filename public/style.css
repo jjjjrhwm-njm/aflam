@@ -1,363 +1,640 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background-color: #141414;
-    font-family: 'Cairo', sans-serif;
-    color: #fff;
-    overflow-x: hidden;
-}
-
-/* Loading */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #141414;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(229, 9, 20, 0.3);
-    border-top-color: #e50914;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Navbar */
-#navbar {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 100;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
-    transition: all 0.3s ease;
-    padding: 20px 0;
-}
-#navbar.scrolled {
-    background: #141414;
-    padding: 10px 0;
-}
-.nav-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.brand h1 {
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: -1px;
-}
-.brand span { color: #e50914; }
-.main-nav { display: flex; gap: 20px; }
-.nav-btn {
-    background: none;
-    border: none;
-    color: #e5e5e5;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.nav-btn:hover, .nav-btn.active { color: #fff; }
-.search-box {
-    position: relative;
-}
-.search-box input {
-    background: rgba(0,0,0,0.75);
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 8px 35px 8px 15px;
-    border-radius: 4px;
-    color: white;
-    font-size: 14px;
-    width: 200px;
-    transition: 0.3s;
-}
-.search-box input:focus {
-    width: 250px;
-    outline: none;
-    border-color: #e50914;
-}
-.search-box i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #aaa;
-}
-.mobile-menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-}
-.mobile-menu {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 70%;
-    height: 100%;
-    background: #141414;
-    z-index: 200;
-    transition: 0.3s;
-    padding: 20px;
-}
-.mobile-menu.active { right: 0; }
-.close-mobile {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 28px;
-    margin-bottom: 30px;
-    cursor: pointer;
-}
-.mobile-menu-links {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-.mobile-nav-btn {
-    background: none;
-    border: none;
-    color: #e5e5e5;
-    font-size: 18px;
-    text-align: right;
-    padding: 10px;
-    cursor: pointer;
-}
-.mobile-nav-btn.active { color: #e50914; }
-
-/* Hero Section */
-.hero {
-    position: relative;
-    height: 80vh;
-    min-height: 500px;
-    display: flex;
-    align-items: center;
-}
-.hero-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center 20%;
-    background-repeat: no-repeat;
-}
-.hero-background::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 50%;
-    background: linear-gradient(to top, #141414, transparent);
-}
-.hero-content {
-    position: relative;
-    z-index: 2;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 40px;
-    width: 100%;
-}
-.hero-content h1 {
-    font-size: 48px;
-    font-weight: 800;
-    margin-bottom: 10px;
-}
-.hero-meta {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-    color: #ccc;
-    font-size: 14px;
-}
-.hero-meta i { margin-left: 5px; }
-.hero-content p {
-    max-width: 500px;
-    font-size: 16px;
-    line-height: 1.5;
-    color: #ddd;
-    margin-bottom: 20px;
-}
-.hero-buttons {
-    display: flex;
-    gap: 15px;
-}
-.btn-play, .btn-fav {
-    padding: 10px 25px;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.btn-play {
-    background: white;
-    color: black;
-}
-.btn-play:hover { background: rgba(255,255,255,0.8); }
-.btn-fav {
-    background: rgba(109,109,110,0.7);
-    color: white;
-}
-.btn-fav:hover { background: rgba(109,109,110,0.9); }
-
-/* Content Grid */
-.content {
-    max-width: 1400px;
-    margin: 40px auto 0;
-    padding: 0 40px;
-}
-.movies-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-.movie-card {
-    cursor: pointer;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: transform 0.3s;
-    background: #1f1f1f;
-}
-.movie-card:hover {
-    transform: scale(1.05);
-    z-index: 10;
-}
-.movie-card img {
-    width: 100%;
-    aspect-ratio: 2/3;
-    object-fit: cover;
-}
-.movie-info {
-    padding: 10px;
-}
-.movie-info h3 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.movie-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #aaa;
-}
-.skeleton-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 20px;
-}
-.skeleton-card {
-    background: #2a2a2a;
-    aspect-ratio: 2/3;
-    border-radius: 8px;
-    animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
-}
-.empty-state {
-    text-align: center;
-    padding: 60px;
-    color: #aaa;
-}
-.empty-state i {
-    font-size: 60px;
-    margin-bottom: 20px;
-}
-
-/* Player Modal */
-.player-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-.player-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-.close-player {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(0,0,0,0.6);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 10;
-}
-.video-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-video {
-    width: 100%;
-    height: 100%;
-    outline: none;
-}
-.toast {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: #e50914;
-    padding: 12px 24px;
-    border-radius: 4px;
-    transform: translateX(200%);
-    transition: 0.3s;
-    z-index: 2000;
-}
-.toast.show { transform: translateX(0); }
-
-/* Responsive */
-@media (max-width: 768px) {
-    .main-nav { display: none; }
-    .mobile-menu-btn { display: block; }
-    .search-box input { width: 140px; }
-    .hero-content h1 { font-size: 32px; }
-    .movies-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-    .content, .nav-container, .hero-content { padding: 0 20px; }
-}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>StreamFlix | Netflix Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #141414;
+            font-family: 'Cairo', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #141414;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(229,9,20,0.3);
+            border-top-color: #e50914;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+            padding: 20px 40px;
+            transition: 0.3s;
+        }
+        .navbar.scrolled { background: #141414; padding: 15px 40px; }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 24px; font-weight: 800; cursor: pointer; }
+        .logo span { color: #e50914; }
+        .nav-links { display: flex; gap: 25px; }
+        .nav-link {
+            background: none;
+            border: none;
+            color: #e5e5e5;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-link:hover, .nav-link.active { color: #fff; }
+        .search {
+            position: relative;
+        }
+        .search input {
+            background: rgba(0,0,0,0.75);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 35px 8px 15px;
+            border-radius: 4px;
+            color: white;
+            width: 200px;
+            transition: 0.3s;
+        }
+        .search input:focus {
+            width: 250px;
+            outline: none;
+            border-color: #e50914;
+        }
+        .search i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+        }
+        .menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 70%;
+            height: 100%;
+            background: #141414;
+            z-index: 200;
+            transition: 0.3s;
+            padding: 20px;
+        }
+        .mobile-menu.active { right: 0; }
+        .close-menu { background: none; border: none; color: white; font-size: 28px; margin-bottom: 30px; cursor: pointer; }
+        .mobile-links { display: flex; flex-direction: column; gap: 20px; }
+        .mobile-link {
+            background: none;
+            border: none;
+            color: #e5e5e5;
+            font-size: 18px;
+            text-align: right;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .mobile-link.active { color: #e50914; }
+        
+        /* Hero */
+        .hero {
+            position: relative;
+            height: 80vh;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+        }
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center 20%;
+        }
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(to top, #141414, transparent);
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            width: 100%;
+        }
+        .hero-content h1 { font-size: 48px; font-weight: 800; margin-bottom: 10px; }
+        .hero-meta { display: flex; gap: 20px; margin-bottom: 15px; color: #ccc; font-size: 14px; }
+        .hero-meta i { margin-left: 5px; }
+        .hero-desc {
+            max-width: 500px;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        .hero-buttons { display: flex; gap: 15px; }
+        .btn-play, .btn-fav {
+            padding: 10px 25px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-play { background: white; color: black; }
+        .btn-play:hover { background: rgba(255,255,255,0.8); }
+        .btn-fav { background: rgba(109,109,110,0.7); color: white; }
+        .btn-fav:hover { background: rgba(109,109,110,0.9); }
+        
+        /* Content Grid - Netflix Style Rows */
+        .content { max-width: 1400px; margin: 40px auto 0; padding: 0 40px; }
+        .row {
+            margin-bottom: 50px;
+        }
+        .row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .row-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .row-controls {
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .row:hover .row-controls { opacity: 1; }
+        .row-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .row-btn:hover { background: #e50914; transform: scale(1.05); }
+        .slider {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 10px 0 20px;
+        }
+        .slider::-webkit-scrollbar { height: 0; display: none; }
+        .movie-card {
+            flex: 0 0 auto;
+            width: 200px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+        }
+        .movie-card:hover { transform: scale(1.05); z-index: 10; }
+        .movie-card img {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .movie-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .skeleton-grid {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+        }
+        .skeleton-card {
+            flex: 0 0 auto;
+            width: 200px;
+            aspect-ratio: 2/3;
+            background: #2a2a2a;
+            border-radius: 8px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        .empty {
+            text-align: center;
+            padding: 60px;
+            color: #aaa;
+        }
+        .empty i { font-size: 60px; margin-bottom: 20px; }
+        
+        /* Player */
+        .player-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .player-container { width: 100%; height: 100%; position: relative; }
+        .close-player {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .video-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        video { width: 100%; height: 100%; outline: none; }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #e50914;
+            padding: 12px 24px;
+            border-radius: 4px;
+            transform: translateX(200%);
+            transition: 0.3s;
+            z-index: 2000;
+        }
+        .toast.show { transform: translateX(0); }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .menu-btn { display: block; }
+            .search input { width: 120px; }
+            .hero-content h1 { font-size: 32px; }
+            .movie-card { width: 140px; }
+            .content, .navbar, .hero-content { padding: 0 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading"><div class="spinner"></div></div>
+    
+    <div class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo" id="logo">STREAM<span>FLIX</span></div>
+            <div class="nav-links">
+                <button class="nav-link active" data-filter="all">الرئيسية</button>
+                <button class="nav-link" data-filter="movie">أفلام</button>
+                <button class="nav-link" data-filter="series">مسلسلات</button>
+                <button class="nav-link" data-filter="favorites">قائمتي</button>
+            </div>
+            <div class="search">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchInput" placeholder="بحث...">
+            </div>
+            <button class="menu-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
+        </div>
+    </div>
+    
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="close-menu" id="closeMenu"><i class="fa-solid fa-xmark"></i></button>
+        <div class="mobile-links">
+            <button class="mobile-link active" data-filter="all">الرئيسية</button>
+            <button class="mobile-link" data-filter="movie">أفلام</button>
+            <button class="mobile-link" data-filter="series">مسلسلات</button>
+            <button class="mobile-link" data-filter="favorites">قائمتي</button>
+        </div>
+    </div>
+    
+    <section class="hero" id="hero">
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="hero-content">
+            <h1 id="heroTitle"></h1>
+            <div class="hero-meta">
+                <span id="heroYear"></span>
+                <span><i class="fa-solid fa-star"></i> <span id="heroRating">4.5</span></span>
+            </div>
+            <p class="hero-desc" id="heroDesc"></p>
+            <div class="hero-buttons">
+                <button class="btn-play" id="playBtn"><i class="fa-solid fa-play"></i> تشغيل</button>
+                <button class="btn-fav" id="favBtn"><i class="fa-regular fa-heart"></i> قائمتي</button>
+            </div>
+        </div>
+    </section>
+    
+    <main class="content" id="content">
+        <div id="rowsContainer"></div>
+        <div class="empty" id="empty" style="display: none;">
+            <i class="fa-solid fa-face-frown"></i>
+            <h3>لا توجد نتائج</h3>
+        </div>
+    </main>
+    
+    <div class="player-modal" id="playerModal">
+        <div class="player-container">
+            <button class="close-player" id="closePlayer"><i class="fa-solid fa-xmark"></i></button>
+            <div class="video-wrapper">
+                <video id="playerVideo" controls></video>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+        const App = {
+            data: [],
+            favorites: [],
+            userId: localStorage.getItem('userId') || 'user_' + Date.now(),
+            currentFilter: 'all',
+            heroItem: null,
+            player: null,
+            
+            init: async () => {
+                if (!localStorage.getItem('userId')) localStorage.setItem('userId', App.userId);
+                App.setupEvents();
+                await App.loadFavorites();
+                await App.fetchData();
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+            },
+            
+            setupEvents: () => {
+                document.querySelectorAll('.nav-link, .mobile-link').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const filter = btn.dataset.filter;
+                        App.currentFilter = filter;
+                        document.querySelectorAll('.nav-link, .mobile-link').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        if (filter === 'favorites') App.renderFavorites();
+                        else App.filterContent();
+                        document.getElementById('mobileMenu').classList.remove('active');
+                    });
+                });
+                
+                let timeout;
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => App.filterContent(e.target.value), 300);
+                });
+                
+                document.getElementById('playBtn').onclick = () => {
+                    if (App.heroItem) App.playVideo(App.heroItem.link, App.heroItem.title);
+                };
+                document.getElementById('favBtn').onclick = () => {
+                    if (App.heroItem) App.toggleFavorite(App.heroItem);
+                };
+                document.getElementById('closePlayer').onclick = App.closePlayer;
+                document.getElementById('menuBtn').onclick = () => {
+                    document.getElementById('mobileMenu').classList.add('active');
+                };
+                document.getElementById('closeMenu').onclick = () => {
+                    document.getElementById('mobileMenu').classList.remove('active');
+                };
+                document.getElementById('logo').onclick = () => {
+                    App.currentFilter = 'all';
+                    document.querySelectorAll('.nav-link, .mobile-link').forEach(b => b.classList.remove('active'));
+                    document.querySelector('.nav-link[data-filter="all"]').classList.add('active');
+                    document.querySelector('.mobile-link[data-filter="all"]').classList.add('active');
+                    App.filterContent();
+                };
+                
+                window.addEventListener('scroll', () => {
+                    const nav = document.getElementById('navbar');
+                    if (window.scrollY > 50) nav.classList.add('scrolled');
+                    else nav.classList.remove('scrolled');
+                });
+            },
+            
+            fetchData: async () => {
+                try {
+                    const res = await fetch('/api/content');
+                    const result = await res.json();
+                    if (result.success) {
+                        App.data = result.data;
+                        if (App.data.length > 0) App.renderHero(App.data[0]);
+                        App.renderRows(App.data);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            },
+            
+            filterContent: (search = '') => {
+                let filtered = App.data;
+                if (App.currentFilter !== 'all') {
+                    filtered = filtered.filter(item => item.category === App.currentFilter);
+                }
+                if (search) {
+                    filtered = filtered.filter(item => item.title.includes(search) || item.genre.includes(search));
+                }
+                App.renderRows(filtered);
+            },
+            
+            renderHero: (item) => {
+                App.heroItem = item;
+                const imgUrl = `/api/image/${item.poster}`;
+                document.getElementById('heroBg').style.backgroundImage = `url('${imgUrl}')`;
+                document.getElementById('heroTitle').textContent = item.title;
+                document.getElementById('heroYear').textContent = item.year;
+                document.getElementById('heroRating').textContent = item.rating || '4.5';
+                document.getElementById('heroDesc').textContent = item.description || 'لا يوجد وصف';
+                const isFav = App.favorites.some(f => f._id === item._id);
+                const favBtn = document.getElementById('favBtn');
+                favBtn.innerHTML = isFav ? '<i class="fa-solid fa-heart"></i> في قائمتي' : '<i class="fa-regular fa-heart"></i> قائمتي';
+            },
+            
+            renderRows: (items) => {
+                const container = document.getElementById('rowsContainer');
+                const empty = document.getElementById('empty');
+                
+                if (items.length === 0) {
+                    container.innerHTML = '';
+                    empty.style.display = 'block';
+                    return;
+                }
+                empty.style.display = 'none';
+                
+                // Group by genre
+                const grouped = {};
+                items.forEach(item => {
+                    const genre = item.genre || 'أخرى';
+                    if (!grouped[genre]) grouped[genre] = [];
+                    grouped[genre].push(item);
+                });
+                
+                container.innerHTML = '';
+                Object.keys(grouped).forEach(genre => {
+                    const genreItems = grouped[genre];
+                    const rowId = `row-${Date.now()}-${Math.random()}`;
+                    const section = document.createElement('div');
+                    section.className = 'row';
+                    section.innerHTML = `
+                        <div class="row-header">
+                            <h2>${genre}</h2>
+                            <div class="row-controls">
+                                <button class="row-btn prev-btn" data-row="${rowId}"><i class="fa-solid fa-chevron-right"></i></button>
+                                <button class="row-btn next-btn" data-row="${rowId}"><i class="fa-solid fa-chevron-left"></i></button>
+                            </div>
+                        </div>
+                        <div class="slider" id="${rowId}">
+                            ${genreItems.map(item => `
+                                <div class="movie-card" data-id="${item._id}">
+                                    <img src="/api/image/${item.poster}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                    <h3>${item.title}</h3>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    container.appendChild(section);
+                });
+                
+                // Add click events
+                document.querySelectorAll('.movie-card').forEach(card => {
+                    card.onclick = () => {
+                        const id = card.dataset.id;
+                        const item = App.data.find(i => i._id === id);
+                        if (item) App.renderHero(item);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    };
+                });
+                
+                // Add slider navigation
+                document.querySelectorAll('.prev-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        const rowId = btn.dataset.row;
+                        const slider = document.getElementById(rowId);
+                        slider.scrollBy({ left: -280, behavior: 'smooth' });
+                    };
+                });
+                document.querySelectorAll('.next-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        const rowId = btn.dataset.row;
+                        const slider = document.getElementById(rowId);
+                        slider.scrollBy({ left: 280, behavior: 'smooth' });
+                    };
+                });
+            },
+            
+            renderFavorites: () => {
+                const favs = App.data.filter(item => App.favorites.some(f => f._id === item._id));
+                App.renderRows(favs);
+            },
+            
+            toggleFavorite: async (item) => {
+                const isFav = App.favorites.some(f => f._id === item._id);
+                const action = isFav ? 'remove' : 'add';
+                try {
+                    const res = await fetch(`/api/user/${App.userId}/favorites`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contentId: item._id, action })
+                    });
+                    if (res.ok) {
+                        if (action === 'add') App.favorites.push(item);
+                        else App.favorites = App.favorites.filter(f => f._id !== item._id);
+                        App.showToast(action === 'add' ? 'تمت الإضافة' : 'تمت الإزالة');
+                        if (App.heroItem?._id === item._id) {
+                            const btn = document.getElementById('favBtn');
+                            btn.innerHTML = action === 'add' ? '<i class="fa-solid fa-heart"></i> في قائمتي' : '<i class="fa-regular fa-heart"></i> قائمتي';
+                        }
+                        if (App.currentFilter === 'favorites') App.renderFavorites();
+                    }
+                } catch (err) { console.error(err); }
+            },
+            
+            playVideo: (url, title) => {
+                const modal = document.getElementById('playerModal');
+                const video = document.getElementById('playerVideo');
+                modal.style.display = 'flex';
+                
+                if (App.player) App.player.destroy();
+                
+                if (url.includes('m3u8') && Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(url);
+                    hls.attachMedia(video);
+                    App.player = new Plyr(video);
+                } else if (url.includes('youtube') || url.includes('youtu.be')) {
+                    App.player = new Plyr(video);
+                    App.player.source = { type: 'video', sources: [{ src: url, provider: 'youtube' }] };
+                } else {
+                    video.src = url;
+                    App.player = new Plyr(video);
+                }
+                App.player.play();
+            },
+            
+            closePlayer: () => {
+                const modal = document.getElementById('playerModal');
+                modal.style.display = 'none';
+                if (App.player) {
+                    App.player.stop();
+                    App.player.destroy();
+                    App.player = null;
+                }
+                document.getElementById('playerVideo').src = '';
+            },
+            
+            loadFavorites: async () => {
+                try {
+                    const res = await fetch(`/api/user/${App.userId}/favorites`);
+                    const result = await res.json();
+                    if (result.success) App.favorites = result.data;
+                } catch (err) { console.error(err); }
+            },
+            
+            showToast: (msg) => {
+                const toast = document.getElementById('toast');
+                toast.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            }
+        };
+        
+        App.init();
+    </script>
+</body>
+</html>
