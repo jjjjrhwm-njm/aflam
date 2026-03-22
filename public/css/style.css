@@ -1,0 +1,52 @@
+/* إعدادات عامة */
+:root {
+    --bg-color: #141414;
+    --primary-red: #E50914;
+    --text-color: #FFFFFF;
+    --overlay: rgba(0, 0, 0, 0.7);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-color); overflow-x: hidden; }
+
+/* شريط التنقل */
+.navbar { position: fixed; top: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; transition: background 0.3s; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
+.navbar.scrolled { background: var(--bg-color); }
+.logo { font-size: 28px; font-weight: bold; color: var(--primary-red); }
+.logo span { color: #fff; }
+.user-status { font-size: 14px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; }
+.user-status.vip-active { background: gold; color: black; font-weight: bold; }
+
+/* البانر الرئيسي */
+.hero { position: relative; height: 70vh; background-size: cover; background-position: center; display: flex; align-items: flex-end; padding-bottom: 50px; }
+.hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, var(--bg-color) 0%, transparent 100%); }
+.hero-content { position: relative; z-index: 10; padding: 0 40px; max-width: 600px; }
+.hero h1 { font-size: 48px; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+.tags { margin-bottom: 20px; display: flex; gap: 10px; }
+.tag { padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
+.tag.vip { background: gold; color: black; }
+.tag.hd { border: 1px solid rgba(255,255,255,0.5); }
+.btn { padding: 10px 25px; font-size: 18px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+.btn.play { background: white; color: black; }
+.btn.play:hover { background: rgba(255,255,255,0.7); }
+
+/* الأقسام والكروت */
+.content-sections { padding: 20px 40px; }
+.section-title { font-size: 20px; margin-bottom: 15px; margin-top: 30px; }
+.vip-title { color: gold; }
+.slider-container { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: none; }
+.slider-container::-webkit-scrollbar { display: none; }
+.movie-card { min-width: 200px; height: 300px; position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.3s; }
+.movie-card:hover { transform: scale(1.05); z-index: 10; }
+.movie-card img { width: 100%; height: 100%; object-fit: cover; }
+.movie-info { position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
+.movie-title { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+
+/* قفل الـ VIP */
+.locked-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; color: gold; font-weight: bold; text-align: center; padding: 10px;}
+
+/* مشغل الفيديو (Modal) */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: flex; flex-direction: column; }
+.modal.hidden { display: none; }
+.modal-header { display: flex; justify-content: space-between; padding: 15px 20px; background: rgba(0,0,0,0.8); }
+.close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+.video-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; background: black; }
