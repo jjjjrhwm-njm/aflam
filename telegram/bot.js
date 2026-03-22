@@ -6,263 +6,230 @@ const config = require('../config');
 const bot = new TelegramBot(config.BOT_TOKEN, { polling: true });
 const userStates = new Map();
 
-// قائمة التصنيفات
 const GENRES = ['أكشن', 'رعب', 'كوميدي', 'دراما', 'فانتازيا', 'خيال علمي', 'أنمي', 'إثارة'];
 
-// عرض القائمة الرئيسية
+// دالة مساعدة لتوحيد مقارنة الـ ID
+const isAdmin = (id) => id.toString() === config.ADMIN_ID.toString();
+
 async function sendMainMenu(chatId, messageId = null) {
-    const text = '🎬 **لوحة تحكم StreamFlix**\nاختر الأمر:';
+    const text = '🎬 **لوحة تحكم StreamFlix Pro**\nأهلاً بك يا مطور، اختر الأمر:';
     const keyboard = {
         reply_markup: {
             inline_keyboard: [
-                [{ text: '📢 نشر محتوى جديد', callback_data: 'publish' }],
-                [{ text: '✏️ تعديل أو حذف', callback_data: 'edit' }],
-                [{ text: '👑 إدارة VIP', callback_data: 'vip' }]
+                [{ text: '📢 نشر محتوى جديد', callback_data: 'publish_main' }],
+                [{ text: '✏️ تعديل أو حذف محتوى', callback_data: 'edit_main' }],
+                [{ text: '👑 إدارة اشتراكات VIP', callback_data: 'vip_main' }]
             ]
         }
     };
-    if (messageId) {
-        await bot.editMessageText(text, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...keyboard });
-    } else {
-        await bot.sendMessage(chatId, text, { parse_mode: 'Markdown', ...keyboard });
+
+    try {
+        if (messageId) {
+            await bot.editMessageText(text, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', ...keyboard });
+        } else {
+            await bot.sendMessage(chatId, text, { parse_mode: 'Markdown', ...keyboard });
+        }
+    } catch (err) {
+        console.error("Error sending menu:", err.message);
     }
 }
 
-// بدء التشغيل
+// معالجة رسالة /start
 bot.onText(/\/start/, async (msg) => {
-    const chatId = msg.chat.id.toString();
-    if (chatId === config.ADMIN_ID) {
+    const chatId = msg.chat.id;
+    if (isAdmin(chatId)) {
         await sendMainMenu(chatId);
     } else {
-        // ربط المستخدم بالتلغرام (إنشاء حساب أو تحديث)
-        let user = await User.findOne({ telegramId: chatId });
-        if (!user) {
-            user = new User({
-                username: msg.from.username || `user_${chatId}`,
-                email: `${chatId}@telegram.user`,
-                password: Math.random().toString(36).slice(-8),
-                telegramId: chatId
-            });
-            await user.save();
-        }
-        await bot.sendMessage(chatId, `🎬 **مرحباً بك في StreamFlix!**\n${config.APP_URL}`, { parse_mode: 'Markdown' });
+        await bot.sendMessage(chatId, `🎬 **مرحباً بك في StreamFlix!**\nتطبيق المشاهدة الأفضل.\n\n🔗 رابط المنصة: ${config.APP_URL}`, { parse_mode: 'Markdown' });
     }
 });
 
-// معالجة الأوامر النصية
-bot.onText(/^نشر$/, async (msg) => {
-    const chatId = msg.chat.id.toString();
-    if (chatId !== config.ADMIN_ID) return;
-    await bot.sendMessage(chatId, 'اختر نوع المحتوى:', {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '🎬 فيلم', callback_data: 'publish_movie' }],
-                [{ text: '📺 مسلسل', callback_data: 'publish_series' }],
-                [{ text: '👑 VIP', callback_data: 'publish_vip' }]  // خيار VIP
-            ]
-        }
-    });
-});
-
-bot.onText(/^تعديل$/, async (msg) => {
-    const chatId = msg.chat.id.toString();
-    if (chatId !== config.ADMIN_ID) return;
-    await bot.sendMessage(chatId, '🔍 أرسل **اسم** المحتوى أو **رابطه**:', { parse_mode: 'Markdown' });
-    userStates.set(chatId, { step: 'waiting_content_for_edit' });
-});
-
-// إدارة VIP: منح أو إلغاء صلاحية VIP لمستخدم
-bot.onText(/^تعديل VIP$/, async (msg) => {
-    const chatId = msg.chat.id.toString();
-    if (chatId !== config.ADMIN_ID) return;
-    await bot.sendMessage(chatId, 'أرسل اسم المستخدم (username) أو البريد الإلكتروني للمستخدم الذي تريد تعديل صلاحيته VIP:');
-    userStates.set(chatId, { step: 'waiting_user_for_vip' });
-});
-
-// معالجة callback queries
+// المحرك الرئيسي للأزرار (Callback Query)
 bot.on('callback_query', async (query) => {
-    const chatId = query.message.chat.id.toString();
-    if (chatId !== config.ADMIN_ID) return;
-    const data = query.data;
+    const chatId = query.message.chat.id;
     const msgId = query.message.message_id;
+    const data = query.data;
 
-    if (data === 'publish_movie' || data === 'publish_series' || data === 'publish_vip') {
-        const category = data === 'publish_movie' ? 'movie' : (data === 'publish_series' ? 'series' : 'movie');
-        const isVIP = data === 'publish_vip';
-        const buttons = GENRES.map(g => [{ text: g, callback_data: `genre_${category}_${g}_${isVIP}` }]);
-        const rows = [];
-        for (let i = 0; i < buttons.length; i += 2) rows.push(buttons.slice(i, i + 2));
-        rows.push([{ text: '🔙 إلغاء', callback_data: 'cancel' }]);
-        await bot.editMessageText('اختر التصنيف:', {
-            chat_id: chatId,
-            message_id: msgId,
-            reply_markup: { inline_keyboard: rows }
-        });
+    // 1. فك تعليق الزر فوراً (Critical Fix)
+    await bot.answerCallbackQuery(query.id).catch(() => {});
+
+    // 2. التحقق من الصلاحية
+    if (!isAdmin(chatId)) {
+        return bot.sendMessage(chatId, "⚠️ عذراً، هذه اللوحة مخصصة للمطور فقط.");
     }
-    else if (data.startsWith('genre_')) {
-        const parts = data.split('_');
-        const category = parts[1];
-        const genre = parts[2];
-        const isVIP = parts[3] === 'true';
-        userStates.set(chatId, { step: 'waiting_poster', category, genre, isVIP });
-        await bot.editMessageText(`✅ التصنيف: ${genre}\n📸 أرسل صورة البوستر الآن:`, {
-            chat_id: chatId,
-            message_id: msgId
-        });
-    }
-    else if (data === 'edit_link' || data === 'edit_name' || data === 'edit_image' || data === 'edit_delete') {
-        const action = data.replace('edit_', '');
-        const state = userStates.get(chatId);
-        if (!state || !state.contentId) return;
-        if (action === 'delete') {
-            await Content.findByIdAndDelete(state.contentId);
-            await bot.editMessageText('✅ تم الحذف بنجاح!', { chat_id: chatId, message_id: msgId });
-            userStates.delete(chatId);
-            setTimeout(() => sendMainMenu(chatId), 2000);
-        } else {
-            userStates.set(chatId, { step: `editing_${action}`, contentId: state.contentId });
-            let prompt = '';
-            if (action === 'link') prompt = '📎 أرسل الرابط الجديد:';
-            if (action === 'name') prompt = '📝 أرسل الاسم الجديد:';
-            if (action === 'image') prompt = '🖼️ أرسل الصورة الجديدة:';
-            await bot.editMessageText(prompt, { chat_id: chatId, message_id: msgId });
+
+    try {
+        // --- قسم النشر ---
+        if (data === 'publish_main') {
+            await bot.editMessageText('اختر نوع المحتوى الذي تريد نشره:', {
+                chat_id: chatId,
+                message_id: msgId,
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '🎬 فيلم عادي', callback_data: 'pub_movie' }, { text: '📺 مسلسل عادي', callback_data: 'pub_series' }],
+                        [{ text: '👑 محتوى VIP (فيلم)', callback_data: 'pub_vip' }],
+                        [{ text: '🔙 رجوع', callback_data: 'back_to_main' }]
+                    ]
+                }
+            });
         }
-    }
-    else if (data === 'vip') {
-        await bot.editMessageText('اختر الإجراء:', {
-            chat_id: chatId,
-            message_id: msgId,
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: '👑 منح VIP', callback_data: 'vip_grant' }],
-                    [{ text: '❌ إلغاء VIP', callback_data: 'vip_revoke' }],
-                    [{ text: '🔙 رجوع', callback_data: 'cancel' }]
-                ]
+        
+        else if (data.startsWith('pub_')) {
+            const type = data.split('_')[1];
+            const isVIP = type === 'vip';
+            const category = type === 'series' ? 'series' : 'movie';
+            
+            userStates.set(chatId, { step: 'waiting_genre', category, isVIP });
+            
+            const rows = [];
+            for (let i = 0; i < GENRES.length; i += 2) {
+                rows.push(GENRES.slice(i, i + 2).map(g => ({ text: g, callback_data: `set_genre_${g}` })));
             }
-        });
+            rows.push([{ text: '🔙 إلغاء', callback_data: 'back_to_main' }]);
+            
+            await bot.editMessageText(`لقد اخترت نشر ${category === 'series' ? 'مسلسل' : 'فيلم'}${isVIP ? ' VIP' : ''}.\nالآن اختر التصنيف:`, {
+                chat_id: chatId,
+                message_id: msgId,
+                reply_markup: { inline_keyboard: rows }
+            });
+        }
+
+        else if (data.startsWith('set_genre_')) {
+            const genre = data.replace('set_genre_', '');
+            const state = userStates.get(chatId);
+            if (!state) return sendMainMenu(chatId);
+
+            state.genre = genre;
+            state.step = 'waiting_poster';
+            userStates.set(chatId, state);
+
+            await bot.editMessageText(`✅ تم اختيار: ${genre}\n📸 **الآن أرسل صورة البوستر (Image):**`, {
+                chat_id: chatId,
+                message_id: msgId,
+                parse_mode: 'Markdown'
+            });
+        }
+
+        // --- قسم التعديل ---
+        else if (data === 'edit_main') {
+            userStates.set(chatId, { step: 'waiting_search_query' });
+            await bot.editMessageText('🔍 أرسل **اسم المحتوى** أو **الرابط** الذي تريد البحث عنه لتعديله:', {
+                chat_id: chatId,
+                message_id: msgId,
+                parse_mode: 'Markdown',
+                reply_markup: { inline_keyboard: [[{ text: '🔙 إلغاء', callback_data: 'back_to_main' }]] }
+            });
+        }
+
+        // --- قسم VIP ---
+        else if (data === 'vip_main') {
+            await bot.editMessageText('👑 **إدارة اشتراكات VIP**\nاختر الإجراء المطلوب للمستخدمين:', {
+                chat_id: chatId,
+                message_id: msgId,
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '➕ منح صلاحية VIP', callback_data: 'vip_grant' }],
+                        [{ text: '➖ سحب صلاحية VIP', callback_data: 'vip_revoke' }],
+                        [{ text: '🔙 رجوع', callback_data: 'back_to_main' }]
+                    ]
+                }
+            });
+        }
+
+        else if (data === 'vip_grant' || data === 'vip_revoke') {
+            userStates.set(chatId, { step: 'waiting_user_id', action: data === 'vip_grant' ? 'grant' : 'revoke' });
+            await bot.editMessageText(`أرسل الآن **اسم المستخدم** (Username) أو **البريد الإلكتروني** للشخص المراد ${data === 'vip_grant' ? 'ترقيته' : 'سحب اشتراكه'}:`, {
+                chat_id: chatId,
+                message_id: msgId,
+                parse_mode: 'Markdown'
+            });
+        }
+
+        else if (data === 'back_to_main') {
+            userStates.delete(chatId);
+            await sendMainMenu(chatId, msgId);
+        }
+
+    } catch (err) {
+        console.error("Callback Error:", err);
+        bot.sendMessage(chatId, "❌ حدث خطأ داخلي في المعالجة.");
     }
-    else if (data === 'vip_grant' || data === 'vip_revoke') {
-        userStates.set(chatId, { step: 'waiting_user_for_vip', action: data === 'vip_grant' ? 'grant' : 'revoke' });
-        await bot.editMessageText('أرسل اسم المستخدم أو البريد الإلكتروني:', { chat_id: chatId, message_id: msgId });
-    }
-    else if (data === 'cancel') {
-        await bot.editMessageText('❌ تم الإلغاء', { chat_id: chatId, message_id: msgId });
-        userStates.delete(chatId);
-        setTimeout(() => sendMainMenu(chatId), 2000);
-    }
-    await bot.answerCallbackQuery(query.id);
 });
 
-// معالجة الرسائل (صور، نصوص)
+// معالجة الرسائل النصية والصور (Input Handling)
 bot.on('message', async (msg) => {
-    const chatId = msg.chat.id.toString();
-    if (chatId !== config.ADMIN_ID) return;
+    const chatId = msg.chat.id;
+    if (!isAdmin(chatId) || msg.text?.startsWith('/')) return;
+
     const state = userStates.get(chatId);
     if (!state) return;
 
-    // نشر محتوى جديد: استلام الصورة
-    if (state.step === 'waiting_poster' && msg.photo) {
-        state.poster = msg.photo[msg.photo.length - 1].file_id;
-        state.step = 'waiting_link';
-        userStates.set(chatId, state);
-        await bot.sendMessage(chatId, '✅ تم استلام الصورة\n📎 الآن أرسل رابط الفيديو:');
-    }
-    // رابط الفيديو
-    else if (state.step === 'waiting_link' && msg.text) {
-        state.link = msg.text;
-        state.step = 'waiting_title';
-        userStates.set(chatId, state);
-        await bot.sendMessage(chatId, '✅ تم استلام الرابط\n📝 الآن أرسل اسم المحتوى:');
-    }
-    // الاسم
-    else if (state.step === 'waiting_title' && msg.text) {
-        try {
+    try {
+        // خطوة البوستر
+        if (state.step === 'waiting_poster' && msg.photo) {
+            state.poster = msg.photo[msg.photo.length - 1].file_id;
+            state.step = 'waiting_link';
+            userStates.set(chatId, state);
+            await bot.sendMessage(chatId, '✅ تم حفظ البوستر.\n📎 الآن أرسل **رابط الفيديو** (Direct Link or YouTube):', { parse_mode: 'Markdown' });
+        }
+        
+        // خطوة الرابط
+        else if (state.step === 'waiting_link' && msg.text) {
+            state.link = msg.text;
+            state.step = 'waiting_title';
+            userStates.set(chatId, state);
+            await bot.sendMessage(chatId, '✅ تم حفظ الرابط.\n📝 أرسل الآن **عنوان الفيلم/المسلسل**:');
+        }
+
+        // خطوة العنوان النهائي والحفظ
+        else if (state.step === 'waiting_title' && msg.text) {
             const newContent = new Content({
                 title: msg.text,
                 link: state.link,
                 category: state.category,
                 genre: state.genre,
                 poster: state.poster,
-                year: new Date().getFullYear(),
-                isVIP: state.isVIP || false
+                isVIP: state.isVIP
             });
             await newContent.save();
-            const vipText = state.isVIP ? ' (VIP)' : '';
-            await bot.sendMessage(chatId, `✅ **تم النشر بنجاح!**\n📺 ${msg.text}\n📂 ${state.genre}${vipText}`, { parse_mode: 'Markdown' });
             userStates.delete(chatId);
+            await bot.sendMessage(chatId, `🚀 **تم النشر بنجاح!**\nالعنوان: ${msg.text}\nالتصنيف: ${state.genre}\nالنوع: ${state.isVIP ? '💎 VIP' : '🆓 مجاني'}`, { parse_mode: 'Markdown' });
             await sendMainMenu(chatId);
-        } catch (err) {
-            await bot.sendMessage(chatId, '❌ حدث خطأ أثناء الحفظ');
         }
-    }
 
-    // تعديل: البحث عن محتوى
-    else if (state.step === 'waiting_content_for_edit' && msg.text) {
-        const search = msg.text;
-        let content = await Content.findOne({ link: search });
-        if (!content) content = await Content.findOne({ title: search });
-        if (!content) {
-            await bot.sendMessage(chatId, '❌ لم يتم العثور على محتوى');
-            userStates.delete(chatId);
-            return;
+        // معالجة البحث للتعديل
+        else if (state.step === 'waiting_search_query' && msg.text) {
+            const content = await Content.findOne({ $or: [{ title: new RegExp(msg.text, 'i') }, { link: msg.text }] });
+            if (!content) return bot.sendMessage(chatId, '❌ لم يتم العثور على هذا المحتوى، جرب اسماً آخر.');
+            
+            userStates.set(chatId, { step: 'editing', contentId: content._id });
+            await bot.sendMessage(chatId, `🔍 وجدنا: **${content.title}**\nماذا تريد أن تفعل؟`, {
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '🗑️ حذف المحتوى نهائياً', callback_data: 'confirm_delete' }],
+                        [{ text: '🔙 إلغاء', callback_data: 'back_to_main' }]
+                    ]
+                }
+            });
         }
-        userStates.set(chatId, { step: 'edit_menu', contentId: content._id });
-        await bot.sendMessage(chatId, `✏️ **${content.title}**\nاختر الإجراء:`, {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: '🔗 تعديل الرابط', callback_data: 'edit_link' }],
-                    [{ text: '📝 تعديل الاسم', callback_data: 'edit_name' }],
-                    [{ text: '🖼️ تعديل الصورة', callback_data: 'edit_image' }],
-                    [{ text: '🗑️ حذف المحتوى', callback_data: 'edit_delete' }],
-                    [{ text: '🔙 إلغاء', callback_data: 'cancel' }]
-                ]
-            }
-        });
-    }
 
-    // تعديل الرابط
-    else if (state.step === 'editing_link' && msg.text) {
-        await Content.findByIdAndUpdate(state.contentId, { link: msg.text });
-        await bot.sendMessage(chatId, '✅ تم تحديث الرابط');
-        userStates.delete(chatId);
-        setTimeout(() => sendMainMenu(chatId), 2000);
-    }
-    // تعديل الاسم
-    else if (state.step === 'editing_name' && msg.text) {
-        await Content.findByIdAndUpdate(state.contentId, { title: msg.text });
-        await bot.sendMessage(chatId, '✅ تم تحديث الاسم');
-        userStates.delete(chatId);
-        setTimeout(() => sendMainMenu(chatId), 2000);
-    }
-    // تعديل الصورة
-    else if (state.step === 'editing_image' && msg.photo) {
-        const newPoster = msg.photo[msg.photo.length - 1].file_id;
-        await Content.findByIdAndUpdate(state.contentId, { poster: newPoster });
-        await bot.sendMessage(chatId, '✅ تم تحديث الصورة');
-        userStates.delete(chatId);
-        setTimeout(() => sendMainMenu(chatId), 2000);
-    }
+        // معالجة ترقية VIP
+        else if (state.step === 'waiting_user_id' && msg.text) {
+            const user = await User.findOne({ $or: [{ username: msg.text }, { email: msg.text }] });
+            if (!user) return bot.sendMessage(chatId, '❌ لم يتم العثور على مستخدم بهذا الاسم.');
 
-    // إدارة VIP: البحث عن مستخدم
-    else if (state.step === 'waiting_user_for_vip' && msg.text) {
-        const identifier = msg.text;
-        const user = await User.findOne({ $or: [{ username: identifier }, { email: identifier }] });
-        if (!user) {
-            await bot.sendMessage(chatId, '❌ لم يتم العثور على مستخدم بهذا الاسم أو البريد');
-            userStates.delete(chatId);
-            return;
-        }
-        const newVIPStatus = state.action === 'grant' ? true : false;
-        if (user.isVIP === newVIPStatus) {
-            await bot.sendMessage(chatId, `ℹ️ المستخدم ${user.username} لديه بالفعل ${newVIPStatus ? 'VIP' : 'لا يوجد VIP'}`);
-        } else {
-            user.isVIP = newVIPStatus;
+            user.isVIP = state.action === 'grant';
             await user.save();
-            await bot.sendMessage(chatId, `✅ تم ${newVIPStatus ? 'منح' : 'إلغاء'} صلاحية VIP للمستخدم ${user.username}`);
+            userStates.delete(chatId);
+            await bot.sendMessage(chatId, `✅ تم تحديث حالة المستخدم **${user.username}** بنجاح.`);
+            await sendMainMenu(chatId);
         }
-        userStates.delete(chatId);
-        setTimeout(() => sendMainMenu(chatId), 2000);
+
+    } catch (err) {
+        console.error("Message Processing Error:", err);
+        bot.sendMessage(chatId, "❌ خطأ أثناء معالجة البيانات.");
     }
 });
 
