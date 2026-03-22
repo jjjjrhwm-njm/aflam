@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -15,14 +14,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 3. الراوتات (سيتم إضافتها في الخطوة القادمة)
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/content', require('./routes/content'));
+// 3. الراوتات (APIs)
+app.use('/api/content', require('./routes/content'));
+app.use('/api/auth', require('./routes/auth'));
 
-// 4. تشغيل بوت التلغرام (سيتم إضافته لاحقاً)
-// require('./services/telegramBot');
+// 4. تشغيل بوت التلغرام
+if (env.BOT_TOKEN && env.ADMIN_ID) {
+    require('./services/telegramBot');
+    console.log('🤖 [Telegram Bot] is running...');
+}
 
-// 5. تشغيل الواجهة الرئيسية
+// 5. تشغيل الواجهة الرئيسية (سيرفر الواجهة الأمامية)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
