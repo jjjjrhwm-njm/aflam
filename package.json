@@ -1,16 +1,16 @@
 {
   "name": "streamflix-pro",
-  "version": "7.0.0",
-  "description": "Netflix Style Streaming Platform with Telegram Admin",
+  "version": "6.0.0",
+  "description": "Professional Video Streaming Platform with Telegram Admin Panel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^8.0.0",
     "node-telegram-bot-api": "^0.64.0",
+    "mongoose": "^8.0.0",
+    "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1"
   },
@@ -19,5 +19,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": ["streaming", "movies", "telegram-bot", "netflix-clone", "video-platform"],
+  "author": "StreamFlix Team",
+  "license": "MIT"
 }
