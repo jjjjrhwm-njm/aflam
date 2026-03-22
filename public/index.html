@@ -60,7 +60,6 @@
             <div class="search-box">
                 <i class="fa-solid fa-search"></i>
                 <input type="text" id="searchInput" placeholder="ابحث عن فيلم، مسلسل، أنمي..." autocomplete="off">
-                <div class="search-results" id="searchResults"></div>
             </div>
 
             <div class="user-menu">
@@ -195,18 +194,45 @@
             </button>
         </div>
         
-        <div id="skeletonLoader" class="grid-layout skeleton-grid">
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
+        <!-- Skeleton Loader for Sliders -->
+        <div id="skeletonLoader" class="skeleton-slider" style="display: block;">
+            <div class="skeleton-slider-section">
+                <div class="skeleton-header">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-controls">
+                        <div class="skeleton-btn"></div>
+                        <div class="skeleton-btn"></div>
+                    </div>
+                </div>
+                <div class="skeleton-track">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+            </div>
+            <div class="skeleton-slider-section">
+                <div class="skeleton-header">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-controls">
+                        <div class="skeleton-btn"></div>
+                        <div class="skeleton-btn"></div>
+                    </div>
+                </div>
+                <div class="skeleton-track">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+            </div>
         </div>
 
-        <div id="moviesGrid" class="grid-layout" style="display: none;"></div>
+        <div id="moviesGrid" class="movies-grid" style="display: none;"></div>
         
         <div id="noResults" class="empty-state" style="display: none;">
             <div class="empty-state-icon">
