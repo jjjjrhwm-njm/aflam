@@ -15,6 +15,7 @@ const App = {
     user: null,
     currentItem: null,
     playerInstance: null,
+    state: {}, // ✅ تم إضافة كائن state
 
     // Elements
     elements: {
@@ -261,7 +262,11 @@ const App = {
     groupDataByGenre: () => {
         const grouped = {};
         App.data.forEach(item => {
-            const genre = item.genre || 'أخرى';
+            // ✅ معالجة التصنيف المفقود
+            let genre = item.genre;
+            if (!genre || genre === '') {
+                genre = 'مضاف حديثاً';
+            }
             if (!grouped[genre]) grouped[genre] = [];
             grouped[genre].push(item);
         });
@@ -285,7 +290,8 @@ const App = {
         // Re-group and render
         const grouped = {};
         filtered.forEach(item => {
-            const genre = item.genre || 'أخرى';
+            let genre = item.genre;
+            if (!genre || genre === '') genre = 'مضاف حديثاً';
             if (!grouped[genre]) grouped[genre] = [];
             grouped[genre].push(item);
         });
@@ -420,7 +426,8 @@ const App = {
             'تاريخي': 'fa-solid fa-landmark',
             'عائلي': 'fa-solid fa-family',
             'رياضة': 'fa-solid fa-futbol',
-            'أخرى': 'fa-solid fa-tv'
+            'أخرى': 'fa-solid fa-tv',
+            'مضاف حديثاً': 'fa-solid fa-clock'
         };
         return icons[genre] || 'fa-solid fa-clapperboard';
     },
@@ -546,7 +553,8 @@ const App = {
         // Group favorites by genre
         const grouped = {};
         favs.forEach(item => {
-            const genre = item.genre || 'أخرى';
+            let genre = item.genre;
+            if (!genre || genre === '') genre = 'مضاف حديثاً';
             if (!grouped[genre]) grouped[genre] = [];
             grouped[genre].push(item);
         });
