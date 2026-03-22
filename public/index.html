@@ -10,30 +10,18 @@
 </head>
 <body>
     <header class="navbar" id="navbar">
-        <div class="logo">Stream<span>Flix</span></div>
-        <div class="user-status" id="userStatus">⏳ جاري التحقق...</div>
+        <div class="logo">Stream<span>Flix</span> Pro</div>
+        <div class="user-status" id="userStatus">👤 VIP جاري التحقق...</div>
     </header>
 
-    <section class="hero" id="heroSection">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1 id="heroTitle">جاري التحميل...</h1>
-            <div class="tags">
-                <span id="heroType" class="tag vip">VIP</span>
-                <span class="tag hd">4K Ultra HD</span>
-            </div>
-            <div class="buttons">
-                <button id="heroPlayBtn" class="btn play"><i class="icon-play">▶</i> تشغيل</button>
-            </div>
-        </div>
-    </section>
+    <section class="hero" id="heroSection" style="display:none"></section>
 
     <main class="content-sections">
-        <h2 class="section-title">مضاف حديثاً (عام)</h2>
-        <div class="slider-container" id="publicMoviesGrid"></div>
-
         <h2 class="section-title vip-title">حصرياً للمشتركين 👑</h2>
-        <div class="slider-container" id="vipMoviesGrid"></div>
+        <div class="grid-container" id="vipMoviesGrid"></div>
+
+        <h2 class="section-title">أحدث الأفلام والمسلسلات 📣</h2>
+        <div class="grid-container" id="publicMoviesGrid"></div>
     </main>
 
     <div id="playerModal" class="modal hidden">
