@@ -1,13 +1,13 @@
 /**
- * 🚀 StreamFlix Pro - Advanced Frontend Application
- * 🎬 Universal Player with Advanced Features
- * 👑 Version: 6.0 - Professional Edition
+ * 🚀 StreamFlix Pro - Netflix Style Slider Edition
+ * 🎬 Advanced Horizontal Slider for Each Genre
+ * 👑 Version: 6.1 - Cinematic Experience
  */
 
 const App = {
     state: {
         data: [],
-        filteredData: [],
+        groupedData: {},
         favorites: [],
         currentCategory: 'all',
         currentGenre: 'all',
@@ -16,15 +16,14 @@ const App = {
         currentVideoLink: null,
         currentPage: 1,
         hasMore: true,
-        userId: localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        userId: localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        activeSliderIndex: null
     },
 
     elements: {
         grid: document.getElementById('moviesGrid'),
         skeleton: document.getElementById('skeletonLoader'),
         noResults: document.getElementById('noResults'),
-        loadMoreContainer: document.getElementById('loadMoreContainer'),
-        loadMoreBtn: document.getElementById('loadMoreBtn'),
         navbar: document.getElementById('navbar'),
         heroBanner: document.getElementById('heroBanner'),
         heroTitle: document.getElementById('heroTitle'),
@@ -161,15 +160,32 @@ const App = {
             });
         });
         
-        // Load more button
-        App.elements.loadMoreBtn?.addEventListener('click', () => {
-            App.loadMore();
-        });
-        
         // Hero favorite button
         App.elements.heroFavBtn?.addEventListener('click', () => {
             if (App.state.currentHeroItem) {
                 App.toggleFavorite(App.state.currentHeroItem);
+            }
+        });
+        
+        // Navigation slider buttons (Previous/Next)
+        document.addEventListener('click', (e) => {
+            const prevBtn = e.target.closest('.slider-nav-prev');
+            const nextBtn = e.target.closest('.slider-nav-next');
+            
+            if (prevBtn) {
+                const sliderId = prevBtn.dataset.slider;
+                const slider = document.getElementById(sliderId);
+                if (slider) {
+                    slider.scrollBy({ left: -320, behavior: 'smooth' });
+                }
+            }
+            
+            if (nextBtn) {
+                const sliderId = nextBtn.dataset.slider;
+                const slider = document.getElementById(sliderId);
+                if (slider) {
+                    slider.scrollBy({ left: 320, behavior: 'smooth' });
+                }
             }
         });
     },
@@ -191,14 +207,13 @@ const App = {
             if (reset) {
                 App.state.isLoading = true;
                 App.state.currentPage = 1;
-                App.state.hasMore = true;
-                if (App.elements.skeleton) App.elements.skeleton.style.display = 'grid';
+                if (App.elements.skeleton) App.elements.skeleton.style.display = 'block';
                 if (App.elements.grid) App.elements.grid.style.display = 'none';
             }
             
             const params = new URLSearchParams({
                 page: App.state.currentPage,
-                limit: 20
+                limit: 50
             });
             
             if (App.state.currentCategory !== 'all' && App.state.currentCategory !== 'favorites') {
@@ -219,19 +234,20 @@ const App = {
             if (result.status === 'success') {
                 if (reset) {
                     App.state.data = result.data;
-                    App.state.filteredData = result.data;
                 } else {
                     App.state.data = [...App.state.data, ...result.data];
-                    App.state.filteredData = App.state.data;
                 }
                 
-                App.state.hasMore = result.data.length === 20;
+                App.state.hasMore = result.data.length === 50;
                 
                 if (App.state.data.length > 0) {
+                    // Group data by genre
+                    App.groupDataByGenre();
+                    
                     if (reset && App.state.currentCategory !== 'favorites') {
                         App.renderHero(App.state.data[0]);
                     }
-                    App.renderGrid(App.state.filteredData);
+                    App.renderSliders();
                     if (App.elements.loadMoreContainer) {
                         App.elements.loadMoreContainer.style.display = App.state.hasMore ? 'block' : 'none';
                     }
@@ -251,65 +267,158 @@ const App = {
         }
     },
 
-    loadMore: () => {
-        if (!App.state.isLoading && App.state.hasMore) {
-            App.state.currentPage++;
-            App.fetchData(false);
-        }
-    },
-
-    fetchAnnouncements: async () => {
-        try {
-            const res = await fetch('/api/announcements');
-            const result = await res.json();
-            if (result.status === 'success' && result.data.length > 0) {
-                const announcement = result.data[0];
-                if (App.elements.announcementText) {
-                    App.elements.announcementText.textContent = announcement.message;
-                }
-                if (App.elements.announcementBar) {
-                    App.elements.announcementBar.style.display = 'flex';
-                }
+    groupDataByGenre: () => {
+        const grouped = {};
+        
+        App.state.data.forEach(item => {
+            const genre = item.genre || 'أخرى';
+            if (!grouped[genre]) {
+                grouped[genre] = [];
             }
-        } catch (error) {
-            console.error('Announcement error:', error);
+            grouped[genre].push(item);
+        });
+        
+        // Sort genres by number of items (popular first)
+        App.state.groupedData = Object.fromEntries(
+            Object.entries(grouped).sort((a, b) => b[1].length - a[1].length)
+        );
+    },
+
+    renderSliders: () => {
+        if (!App.elements.grid) return;
+        App.elements.grid.innerHTML = '';
+        
+        const genres = Object.keys(App.state.groupedData);
+        
+        if (genres.length === 0) {
+            App.showEmptyState();
+            return;
+        }
+        
+        if (App.elements.noResults) App.elements.noResults.style.display = 'none';
+        if (App.elements.grid) App.elements.grid.style.display = 'block';
+        
+        genres.forEach((genre, index) => {
+            const items = App.state.groupedData[genre];
+            if (items.length === 0) return;
+            
+            const sliderId = `slider-${index}-${Date.now()}`;
+            const section = document.createElement('div');
+            section.className = 'genre-slider-section';
+            section.setAttribute('data-genre', genre);
+            
+            // Create header with navigation buttons
+            section.innerHTML = `
+                <div class="slider-header">
+                    <div class="slider-title-wrapper">
+                        <div class="genre-icon">
+                            <i class="${App.getGenreIcon(genre)}"></i>
+                        </div>
+                        <h2 class="slider-title">${genre}</h2>
+                    </div>
+                    <div class="slider-controls">
+                        <button class="slider-nav-btn slider-nav-prev" data-slider="${sliderId}" aria-label="السابق">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button class="slider-nav-btn slider-nav-next" data-slider="${sliderId}" aria-label="التالي">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="slider-container" id="${sliderId}">
+                    <div class="slider-track">
+                        ${items.map(item => App.createMovieCardHTML(item)).join('')}
+                    </div>
+                </div>
+            `;
+            
+            App.elements.grid.appendChild(section);
+        });
+        
+        // Attach click events to movie cards
+        document.querySelectorAll('.movie-card-slider').forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = card.dataset.id;
+                const item = App.state.data.find(i => i._id === itemId);
+                if (item) App.openDetails(item);
+            });
+        });
+        
+        // Add scroll shadow effect to sliders
+        document.querySelectorAll('.slider-container').forEach(container => {
+            App.addScrollShadowEffect(container);
+            container.addEventListener('scroll', () => App.addScrollShadowEffect(container));
+        });
+    },
+
+    createMovieCardHTML: (item) => {
+        const imgUrl = App.getThumbnail(item);
+        const title = item.titleAr || item.title;
+        const isFav = App.state.favorites.some(f => f._id === item._id);
+        
+        return `
+            <div class="movie-card-slider" data-id="${item._id}">
+                <div class="movie-card-inner">
+                    <img src="${imgUrl}" loading="lazy" alt="${title}" 
+                         onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop'">
+                    <div class="movie-card-overlay">
+                        <button class="play-btn-overlay" onclick="event.stopPropagation(); App.playVideo('${item.link.replace(/'/g, "\\'")}', '${title.replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                        <button class="fav-btn-overlay ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); App.toggleFavoriteFromCard('${item._id}')">
+                            <i class="fa-solid ${isFav ? 'fa-heart' : 'fa-plus'}"></i>
+                        </button>
+                        <div class="movie-info-overlay">
+                            <h4>${App.truncateText(title, 25)}</h4>
+                            <div class="movie-meta">
+                                <span>${item.year || '2024'}</span>
+                                <span class="dot">•</span>
+                                <span>${item.quality || 'HD'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    addScrollShadowEffect: (container) => {
+        const scrollLeft = container.scrollLeft;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        
+        if (scrollLeft <= 5) {
+            container.classList.remove('scrolled-left');
+        } else {
+            container.classList.add('scrolled-left');
+        }
+        
+        if (scrollLeft >= maxScroll - 5) {
+            container.classList.remove('scrolled-right');
+        } else {
+            container.classList.add('scrolled-right');
         }
     },
 
-    closeAnnouncement: () => {
-        if (App.elements.announcementBar) {
-            App.elements.announcementBar.style.display = 'none';
-        }
-    },
-
-    loadFavorites: async () => {
-        try {
-            const res = await fetch(`/api/user/${App.state.userId}/favorites`);
-            const result = await res.json();
-            if (result.status === 'success') {
-                App.state.favorites = result.data;
-            }
-        } catch (error) {
-            console.error('Favorites error:', error);
-        }
-    },
-
-    extractYTId: (url) => {
-        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-        const match = url.match(regex);
-        return match ? match[1] : null;
-    },
-
-    getThumbnail: (item) => {
-        if (item && item.poster) {
-            return `/api/image/${item.poster}`;
-        }
-        const url = typeof item === 'string' ? item : (item ? item.link : '');
-        const ytId = App.extractYTId(url);
-        if (ytId) {
-            return `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
-        }
-        return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000&auto=format&fit=crop';
+    getGenreIcon: (genre) => {
+        const icons = {
+            'أكشن': 'fa-solid fa-fist-raised',
+            'دراما': 'fa-solid fa-mask',
+            'كوميديا': 'fa-solid fa-face-laugh',
+            'رعب': 'fa-solid fa-ghost',
+            'خيال علمي': 'fa-solid fa-rocket',
+            'مغامرات': 'fa-solid fa-mountain',
+            'فنتازيا': 'fa-solid fa-dragon',
+            'جريمة': 'fa-solid fa-handcuffs',
+            'رومانسي': 'fa-solid fa-heart',
+            'أنمي': 'fa-solid fa-dragon',
+            'وثائقي': 'fa-solid fa-film',
+            'تاريخي': 'fa-solid fa-landmark',
+            'عائلي': 'fa-solid fa-family',
+            'رياضة': 'fa-solid fa-futbol',
+            'أخرى': 'fa-solid fa-tv'
+        };
+        return icons[genre] || 'fa-solid fa-clapperboard';
     },
 
     renderHero: (item) => {
@@ -333,35 +442,13 @@ const App = {
         App.state.currentHeroItem = item;
     },
 
-    renderGrid: (items) => {
-        if (!App.elements.grid) return;
-        App.elements.grid.innerHTML = '';
-        
-        if (items.length === 0) {
-            App.showEmptyState();
-            return;
+    toggleFavoriteFromCard: async (itemId) => {
+        const item = App.state.data.find(i => i._id === itemId);
+        if (item) {
+            await App.toggleFavorite(item);
+            // Refresh sliders to update button states
+            App.renderSliders();
         }
-        
-        if (App.elements.noResults) App.elements.noResults.style.display = 'none';
-        if (App.elements.grid) App.elements.grid.style.display = 'grid';
-        
-        items.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            card.onclick = () => App.openDetails(item);
-            
-            const imgUrl = App.getThumbnail(item);
-            const title = item.titleAr || item.title;
-            
-            card.innerHTML = `
-                <img src="${imgUrl}" loading="lazy" alt="${title}" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop'">
-                <div class="card-overlay">
-                    <div class="play-icon-circle"><i class="fa-solid fa-play"></i></div>
-                    <h3>${App.truncateText(title, 30)}</h3>
-                </div>
-            `;
-            App.elements.grid.appendChild(card);
-        });
     },
 
     filterByGenre: (genre, activeTab) => {
@@ -391,7 +478,7 @@ const App = {
         if (App.elements.searchInput) App.elements.searchInput.value = '';
         
         if (type === 'favorites') {
-            App.renderGrid(App.state.favorites);
+            App.renderFavoritesSliders();
             if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
         } else {
             App.state.currentPage = 1;
@@ -399,19 +486,86 @@ const App = {
         }
     },
 
+    renderFavoritesSliders: () => {
+        if (!App.elements.grid) return;
+        App.elements.grid.innerHTML = '';
+        
+        if (App.state.favorites.length === 0) {
+            App.showEmptyState();
+            return;
+        }
+        
+        if (App.elements.noResults) App.elements.noResults.style.display = 'none';
+        if (App.elements.grid) App.elements.grid.style.display = 'block';
+        
+        // Group favorites by genre
+        const groupedFavs = {};
+        App.state.favorites.forEach(item => {
+            const genre = item.genre || 'أخرى';
+            if (!groupedFavs[genre]) {
+                groupedFavs[genre] = [];
+            }
+            groupedFavs[genre].push(item);
+        });
+        
+        const genres = Object.keys(groupedFavs);
+        
+        genres.forEach((genre, index) => {
+            const items = groupedFavs[genre];
+            if (items.length === 0) return;
+            
+            const sliderId = `fav-slider-${index}-${Date.now()}`;
+            const section = document.createElement('div');
+            section.className = 'genre-slider-section';
+            section.setAttribute('data-genre', genre);
+            
+            section.innerHTML = `
+                <div class="slider-header">
+                    <div class="slider-title-wrapper">
+                        <div class="genre-icon">
+                            <i class="${App.getGenreIcon(genre)}"></i>
+                        </div>
+                        <h2 class="slider-title">${genre} - المفضلة</h2>
+                    </div>
+                    <div class="slider-controls">
+                        <button class="slider-nav-btn slider-nav-prev" data-slider="${sliderId}" aria-label="السابق">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button class="slider-nav-btn slider-nav-next" data-slider="${sliderId}" aria-label="التالي">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="slider-container" id="${sliderId}">
+                    <div class="slider-track">
+                        ${items.map(item => App.createMovieCardHTML(item)).join('')}
+                    </div>
+                </div>
+            `;
+            
+            App.elements.grid.appendChild(section);
+        });
+        
+        // Attach click events to movie cards
+        document.querySelectorAll('.movie-card-slider').forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = card.dataset.id;
+                const item = App.state.favorites.find(i => i._id === itemId);
+                if (item) App.openDetails(item);
+            });
+        });
+        
+        // Add scroll shadow effect
+        document.querySelectorAll('.slider-container').forEach(container => {
+            App.addScrollShadowEffect(container);
+            container.addEventListener('scroll', () => App.addScrollShadowEffect(container));
+        });
+    },
+
     filterAndRender: () => {
         if (App.state.currentCategory === 'favorites') {
-            let filtered = App.state.favorites;
-            if (App.state.currentGenre !== 'all') {
-                filtered = filtered.filter(i => i.genre === App.state.currentGenre);
-            }
-            if (App.state.currentSearchQuery) {
-                filtered = filtered.filter(i => 
-                    (i.titleAr || i.title).toLowerCase().includes(App.state.currentSearchQuery.toLowerCase())
-                );
-            }
-            App.renderGrid(filtered);
-            if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
+            App.renderFavoritesSliders();
         } else {
             App.state.currentPage = 1;
             App.fetchData(true);
@@ -426,21 +580,43 @@ const App = {
         
         if (App.elements.searchInput) App.elements.searchInput.value = '';
         
-        App.renderGrid(App.state.favorites);
+        App.renderFavoritesSliders();
         if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
     },
 
-    handleSearch: (query) => {
+    handleSearch: async (query) => {
         App.state.currentSearchQuery = query;
-        App.state.currentPage = 1;
         
-        if (App.state.currentCategory === 'favorites') {
-            const filtered = App.state.favorites.filter(i => 
-                (i.titleAr || i.title).toLowerCase().includes(query.toLowerCase())
-            );
-            App.renderGrid(filtered);
-        } else {
-            App.fetchData(true);
+        if (query.trim() === '') {
+            if (App.state.currentCategory === 'favorites') {
+                App.renderFavoritesSliders();
+            } else {
+                App.state.currentPage = 1;
+                await App.fetchData(true);
+            }
+            return;
+        }
+        
+        try {
+            const params = new URLSearchParams({
+                search: query,
+                limit: 50
+            });
+            
+            if (App.state.currentCategory !== 'all' && App.state.currentCategory !== 'favorites') {
+                params.append('category', App.state.currentCategory);
+            }
+            
+            const res = await fetch(`/api/content?${params}`);
+            const result = await res.json();
+            
+            if (result.status === 'success') {
+                App.state.data = result.data;
+                App.groupDataByGenre();
+                App.renderSliders();
+            }
+        } catch (error) {
+            console.error('Search error:', error);
         }
     },
 
@@ -511,8 +687,11 @@ const App = {
                     App.elements.detailsFavBtn.innerHTML = action === 'add' ? '<i class="fa-solid fa-check"></i><span>في قائمتي</span>' : '<i class="fa-regular fa-heart"></i><span>أضف لقائمتي</span>';
                 }
                 
+                // Refresh current view
                 if (App.state.currentCategory === 'favorites') {
-                    App.renderGrid(App.state.favorites);
+                    App.renderFavoritesSliders();
+                } else {
+                    App.renderSliders();
                 }
             }
         } catch (error) {
@@ -605,6 +784,60 @@ const App = {
         App.state.currentVideoLink = null;
     },
 
+    fetchAnnouncements: async () => {
+        try {
+            const res = await fetch('/api/announcements');
+            const result = await res.json();
+            if (result.status === 'success' && result.data.length > 0) {
+                const announcement = result.data[0];
+                if (App.elements.announcementText) {
+                    App.elements.announcementText.textContent = announcement.message;
+                }
+                if (App.elements.announcementBar) {
+                    App.elements.announcementBar.style.display = 'flex';
+                }
+            }
+        } catch (error) {
+            console.error('Announcement error:', error);
+        }
+    },
+
+    closeAnnouncement: () => {
+        if (App.elements.announcementBar) {
+            App.elements.announcementBar.style.display = 'none';
+        }
+    },
+
+    loadFavorites: async () => {
+        try {
+            const res = await fetch(`/api/user/${App.state.userId}/favorites`);
+            const result = await res.json();
+            if (result.status === 'success') {
+                App.state.favorites = result.data;
+            }
+        } catch (error) {
+            console.error('Favorites error:', error);
+        }
+    },
+
+    extractYTId: (url) => {
+        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    },
+
+    getThumbnail: (item) => {
+        if (item && item.poster) {
+            return `/api/image/${item.poster}`;
+        }
+        const url = typeof item === 'string' ? item : (item ? item.link : '');
+        const ytId = App.extractYTId(url);
+        if (ytId) {
+            return `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+        }
+        return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000&auto=format&fit=crop';
+    },
+
     updateNavButtons: (activeBtn) => {
         document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(b => b.classList.remove('active'));
         activeBtn.classList.add('active');
@@ -613,7 +846,6 @@ const App = {
     showEmptyState: () => {
         if (App.elements.grid) App.elements.grid.style.display = 'none';
         if (App.elements.noResults) App.elements.noResults.style.display = 'block';
-        if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
     },
 
     truncateText: (text, maxLength) => {
@@ -628,6 +860,9 @@ const App = {
         });
     }
 };
+
+// Make App globally accessible for inline event handlers
+window.App = App;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => App.init());
