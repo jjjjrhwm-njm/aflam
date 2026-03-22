@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFlix Pro | تسجيل الدخول</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .auth-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #e50914;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #e50914;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #e50914;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-submit:hover {
+            background: #f6121e;
+        }
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #aaa;
+        }
+        .toggle-link a {
+            color: #e50914;
+            text-decoration: none;
+        }
+        .error-message {
+            color: #ff4757;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2>StreamFlix Pro</h2>
+        <div id="authForm">
+            <div class="form-group">
+                <input type="text" id="username" placeholder="اسم المستخدم">
+            </div>
+            <div class="form-group">
+                <input type="email" id="email" placeholder="البريد الإلكتروني (للتسجيل)">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="كلمة المرور">
+            </div>
+            <button id="loginBtn" class="btn-submit">تسجيل الدخول</button>
+            <div class="toggle-link">
+                ليس لديك حساب؟ <a href="#" id="showRegister">إنشاء حساب</a>
+            </div>
+            <div id="errorMsg" class="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        let isLogin = true;
+
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const showRegisterLink = document.getElementById('showRegister');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function updateUI() {
+            if (isLogin) {
+                loginBtn.textContent = 'تسجيل الدخول';
+                showRegisterLink.textContent = 'ليس لديك حساب؟ إنشاء حساب';
+                emailInput.style.display = 'none';
+            } else {
+                loginBtn.textContent = 'إنشاء حساب';
+                showRegisterLink.textContent = 'لديك حساب؟ تسجيل الدخول';
+                emailInput.style.display = 'block';
+            }
+        }
+
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLogin = !isLogin;
+            updateUI();
+            errorMsg.textContent = '';
+        });
+
+        async function handleAuth() {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            if (!username || !password) {
+                errorMsg.textContent = 'يرجى ملء جميع الحقول';
+                return;
+            }
+
+            let endpoint = '/api/auth/login';
+            let body = { username, password };
+            if (!isLogin) {
+                const email = emailInput.value.trim();
+                if (!email) {
+                    errorMsg.textContent = 'البريد الإلكتروني مطلوب للتسجيل';
+                    return;
+                }
+                endpoint = '/api/auth/register';
+                body = { username, email, password };
+            }
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/';
+                } else {
+                    errorMsg.textContent = data.message || 'حدث خطأ';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'خطأ في الاتصال بالخادم';
+            }
+        }
+
+        loginBtn.addEventListener('click', handleAuth);
+        updateUI();
+    </script>
+</body>
+</html>
