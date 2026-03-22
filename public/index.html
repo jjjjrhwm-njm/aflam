@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFlix Pro | الصفحة الرئيسية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-text">StreamFlix Pro</div>
+        </div>
+    </div>
+
+    <header id="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-logo"><i class="fa-solid fa-play"></i></div>
+                <h1>Stream<span>Flix</span><span class="pro-badge">PRO</span></h1>
+            </div>
+            <nav class="main-nav">
+                <button class="nav-btn active" data-filter="all"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+                <button class="nav-btn" data-filter="movie"><i class="fa-solid fa-film"></i><span>الأفلام</span></button>
+                <button class="nav-btn" data-filter="series"><i class="fa-solid fa-tv"></i><span>المسلسلات</span></button>
+                <button class="nav-btn" data-filter="favorites"><i class="fa-solid fa-heart"></i><span>قائمتي</span></button>
+                <button class="nav-btn" id="vipBtn"><i class="fa-solid fa-crown"></i><span>VIP</span></button>
+            </nav>
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchInput" placeholder="ابحث عن فيلم، مسلسل..." autocomplete="off">
+            </div>
+            <div class="user-menu">
+                <button class="user-btn" id="userMenuBtn"><i class="fa-solid fa-user"></i></button>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></button>
+        </div>
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-header">
+                <div class="brand-logo small"><i class="fa-solid fa-play"></i></div>
+                <h3>StreamFlix Pro</h3>
+                <button class="close-mobile-menu" id="closeMobileMenu"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="mobile-menu-links">
+                <button class="mobile-nav-btn active" data-filter="all"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+                <button class="mobile-nav-btn" data-filter="movie"><i class="fa-solid fa-film"></i><span>الأفلام</span></button>
+                <button class="mobile-nav-btn" data-filter="series"><i class="fa-solid fa-tv"></i><span>المسلسلات</span></button>
+                <button class="mobile-nav-btn" data-filter="favorites"><i class="fa-solid fa-heart"></i><span>قائمتي</span></button>
+                <button class="mobile-nav-btn" id="mobileVipBtn"><i class="fa-solid fa-crown"></i><span>VIP</span></button>
+            </div>
+        </div>
+    </header>
+
+    <section id="heroBanner" class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-gradient"></div>
+        <div class="hero-content">
+            <div class="hero-badge"><i class="fa-solid fa-crown"></i><span>الأكثر مشاهدة</span></div>
+            <h2 id="heroTitle">جاري التحميل...</h2>
+            <div class="hero-meta">
+                <span class="hero-year" id="heroYear"></span>
+                <span class="hero-quality" id="heroQuality"></span>
+                <span class="hero-duration" id="heroDuration"></span>
+                <span class="hero-rating"><i class="fa-solid fa-star"></i><span id="heroRating"></span></span>
+            </div>
+            <div class="hero-description" id="heroDescription"></div>
+            <div class="hero-buttons">
+                <button id="heroPlayBtn" class="btn-primary"><i class="fa-solid fa-play"></i><span>تشغيل الآن</span></button>
+                <button id="heroInfoBtn" class="btn-secondary"><i class="fa-solid fa-circle-info"></i><span>التفاصيل</span></button>
+                <button id="heroFavBtn" class="btn-outline"><i class="fa-regular fa-heart"></i><span>أضف لقائمتي</span></button>
+            </div>
+        </div>
+        <div class="hero-scroll-indicator"><span>اكتشف المزيد</span><i class="fa-solid fa-chevron-down"></i></div>
+    </section>
+
+    <main class="content-wrapper">
+        <div class="category-tabs">
+            <button class="cat-tab active" data-genre="all"><i class="fa-solid fa-fire"></i><span>الكل</span></button>
+            <button class="cat-tab" data-genre="أكشن"><i class="fa-solid fa-fist-raised"></i><span>أكشن</span></button>
+            <button class="cat-tab" data-genre="دراما"><i class="fa-solid fa-mask"></i><span>دراما</span></button>
+            <button class="cat-tab" data-genre="كوميديا"><i class="fa-solid fa-face-laugh"></i><span>كوميديا</span></button>
+            <button class="cat-tab" data-genre="رعب"><i class="fa-solid fa-ghost"></i><span>رعب</span></button>
+            <button class="cat-tab" data-genre="خيال علمي"><i class="fa-solid fa-rocket"></i><span>خيال علمي</span></button>
+            <button class="cat-tab" data-genre="أنمي"><i class="fa-solid fa-dragon"></i><span>أنمي</span></button>
+        </div>
+        <div id="skeletonLoader" class="skeleton-slider" style="display: block;">
+            <div class="skeleton-slider-section"><div class="skeleton-header"><div class="skeleton-title"></div><div class="skeleton-controls"><div class="skeleton-btn"></div><div class="skeleton-btn"></div></div></div><div class="skeleton-track"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div></div>
+            <div class="skeleton-slider-section"><div class="skeleton-header"><div class="skeleton-title"></div><div class="skeleton-controls"><div class="skeleton-btn"></div><div class="skeleton-btn"></div></div></div><div class="skeleton-track"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div></div>
+        </div>
+        <div id="moviesGrid" class="movies-grid" style="display: none;"></div>
+        <div id="noResults" class="empty-state" style="display: none;"><div class="empty-state-icon"><i class="fa-solid fa-clapperboard"></i></div><h3>لا توجد نتائج!</h3><p>لم نتمكن من العثور على ما تبحث عنه.<br>حاول البحث بكلمات مختلفة.</p></div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section"><div class="footer-logo"><i class="fa-solid fa-play"></i><h2>Stream<span>Flix</span><span class="pro-badge">PRO</span></h2></div><p>منصة المشاهدة الأولى عربياً. استمتع بأفضل المحتوى الحصري بجودة عالية.</p><div class="social-links"><a href="#"><i class="fab fa-facebook"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-twitter"></i></a><a href="#"><i class="fab fa-telegram"></i></a></div></div>
+            <div class="footer-section"><h3>روابط سريعة</h3><ul><li><a href="#">الأفلام</a></li><li><a href="#">المسلسلات</a></li><li><a href="#">الأنمي</a></li><li><a href="#">الأكثر مشاهدة</a></li></ul></div>
+            <div class="footer-section"><h3>معلومات</h3><ul><li><a href="#">عن المنصة</a></li><li><a href="#">سياسة الخصوصية</a></li><li><a href="#">شروط الاستخدام</a></li><li><a href="#">اتصل بنا</a></li></ul></div>
+            <div class="footer-section"><h3>تواصل معنا</h3><p><i class="fas fa-envelope"></i> support@streamflix.com</p><p><i class="fas fa-phone"></i> +966 123 456 789</p></div>
+        </div>
+        <div class="footer-bottom"><p>&copy; 2024 StreamFlix Pro. جميع الحقوق محفوظة.</p></div>
+    </footer>
+
+    <div id="detailsModal" class="modal-backdrop"><div class="details-card"><button class="close-modal" id="closeDetailsBtn"><i class="fa-solid fa-xmark"></i></button><div class="details-image"><img id="detailsImg" src=""><div class="details-img-overlay"></div><div class="details-play-overlay" id="detailsPlayOverlay"><button class="play-overlay-btn"><i class="fa-solid fa-play"></i></button></div></div><div class="details-info"><div class="details-badges"><span class="quality-badge" id="detailsQuality"><i class="fa-solid fa-circle-check"></i> HD</span><span class="year-badge" id="detailsYear"><i class="fa-regular fa-calendar"></i> 2024</span><span class="duration-badge" id="detailsDuration"><i class="fa-regular fa-clock"></i> 120 دقيقة</span></div><h2 id="detailsTitle">اسم الفيلم</h2><div class="details-meta"><span class="director" id="detailsDirector"><i class="fa-solid fa-user"></i> المخرج: -</span><span class="cast" id="detailsCast"><i class="fa-solid fa-users"></i> الممثلين: -</span></div><div class="details-rating"><div class="rating-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i></div><span class="rating-text" id="detailsRating">4.0</span><span class="views-count" id="detailsViews"><i class="fa-regular fa-eye"></i> 0 مشاهدة</span></div><p class="details-description" id="detailsDescription"></p><div class="details-actions"><button id="detailsPlayBtn" class="btn-primary w-100"><i class="fa-solid fa-play"></i><span>شاهد الآن</span></button><button id="detailsFavBtn" class="btn-outline w-100"><i class="fa-regular fa-heart"></i><span>أضف لقائمتي</span></button></div></div></div></div>
+
+    <div id="playerModal" class="player-fullscreen"><div class="player-top-bar"><button class="back-btn" id="closePlayerBtn"><i class="fa-solid fa-arrow-right"></i><span>العودة للمكتبة</span></button><div class="player-info"><span id="playerTitle" class="player-title"></span><span class="player-badge">جودة عالية</span></div></div><div class="video-container"><div id="plyr-video" class="plyr-video-player"></div></div></div>
+
+    <div id="toastNotification" class="toast-notification"><i class="fa-solid fa-check-circle"></i><span>تمت الإضافة إلى قائمتي</span></div>
+
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="script.js"></script>
+</body>
+</html>
