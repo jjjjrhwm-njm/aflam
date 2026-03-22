@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const session = require('express-session');
+const axios = require('axios');
 const config = require('./config');
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -39,22 +40,37 @@ app.use('/api/auth', authRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/user', userRoutes);
 
-// ⭐ راوت جلب الصور من تلغرام باستخدام file_id
+// ⭐ راوت جلب الصور من تلغرام باستخدام Stream (بدون redirect)
 app.get('/api/image/:fileId', async (req, res) => {
     const fileId = req.params.fileId;
     if (!fileId) {
         return res.status(400).send('Missing fileId');
     }
+
     try {
-        // إنشاء كائن البوت (نفس المستخدم في bot.js)
+        // إنشاء كائن بوت مؤقت
         const bot = new TelegramBot(config.BOT_TOKEN);
         const link = await bot.getFileLink(fileId);
-        // إعادة توجيه المستخدم إلى رابط الصورة الحقيقي
-        res.redirect(link.href);
+        const imageUrl = link.href;
+
+        // جلب الصورة باستخدام axios مع stream
+        const response = await axios({
+            method: 'GET',
+            url: imageUrl,
+            responseType: 'stream'
+        });
+
+        // تعيين الـ headers المناسبة للصورة
+        res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // تخزين مؤقت ليوم
+
+        // تمرير البيانات مباشرة إلى الاستجابة
+        response.data.pipe(res);
+
     } catch (error) {
         console.error('Image fetch error:', error);
-        // إرسال صورة افتراضية في حال الفشل
-        res.redirect('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop');
+        // إرسال صورة افتراضية في حال الفشل (يمكن تحميلها من مكان آخر)
+        res.status(500).send('Error fetching image');
     }
 });
 
