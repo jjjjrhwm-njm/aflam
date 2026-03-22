@@ -9,6 +9,11 @@ const userStates = new Map(); // لتخزين خطوات النشر
 // قائمة التصنيفات
 const GENRES = ['أكشن', 'رعب', 'كوميدي', 'دراما', 'فانتازيا', 'خيال علمي', 'أنمي', 'إثارة'];
 
+// وظيفة مساعدة للتحقق من صلاحية الأدمن
+function isAdmin(chatId) {
+    return String(chatId).trim() === String(config.ADMIN_ID).trim();
+}
+
 // عرض القائمة الرئيسية
 async function sendMainMenu(chatId, messageId = null) {
     const text = '🎬 **لوحة تحكم StreamFlix**\nاختر الأمر:';
@@ -17,7 +22,8 @@ async function sendMainMenu(chatId, messageId = null) {
             inline_keyboard: [
                 [{ text: '📢 نشر محتوى جديد', callback_data: 'publish' }],
                 [{ text: '✏️ تعديل أو حذف', callback_data: 'edit' }],
-                [{ text: '👑 إدارة VIP', callback_data: 'vip' }]
+                [{ text: '👑 إدارة VIP', callback_data: 'vip' }],
+                [{ text: '❌ إلغاء العملية', callback_data: 'cancel' }]
             ]
         }
     };
@@ -38,8 +44,8 @@ async function sendMainMenu(chatId, messageId = null) {
 
 // بدء التشغيل
 bot.onText(/\/start/, async (msg) => {
-    const chatId = msg.chat.id.toString(); // تأكد أنها نص للمقارنة
-    if (chatId === config.ADMIN_ID.toString()) {
+    const chatId = msg.chat.id.toString();
+    if (isAdmin(chatId)) {
         await sendMainMenu(chatId);
     } else {
         // ربط المستخدم العادي
@@ -57,15 +63,30 @@ bot.onText(/\/start/, async (msg) => {
     }
 });
 
+// أمر الإلغاء العام
+bot.onText(/\/cancel/, async (msg) => {
+    const chatId = msg.chat.id.toString();
+    if (!isAdmin(chatId)) return;
+    if (userStates.has(chatId)) {
+        userStates.delete(chatId);
+        await bot.sendMessage(chatId, '❌ تم إلغاء العملية الحالية.');
+    } else {
+        await bot.sendMessage(chatId, '⚠️ لا توجد عملية نشطة للإلغاء.');
+    }
+});
+
 // معالجة الضغط على الأزرار (callback_query)
 bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id.toString();
     const data = query.data;
     const msgId = query.message.message_id;
 
+    // الرد الفوري لإزالة التحميل من الزر (يجب أن يكون أول شيء)
+    await bot.answerCallbackQuery(query.id);
+
     // التحقق من الصلاحية
-    if (chatId !== config.ADMIN_ID.toString()) {
-        await bot.answerCallbackQuery(query.id, { text: 'غير مصرح لك بهذا الأمر' });
+    if (!isAdmin(chatId)) {
+        await bot.sendMessage(chatId, '⚠️ غير مصرح لك بهذا الأمر.');
         return;
     }
 
@@ -78,7 +99,8 @@ bot.on('callback_query', async (query) => {
                 inline_keyboard: [
                     [{ text: '🎬 فيلم', callback_data: 'publish_movie' }],
                     [{ text: '📺 مسلسل', callback_data: 'publish_series' }],
-                    [{ text: '👑 VIP (فيلم حصري)', callback_data: 'publish_vip' }]
+                    [{ text: '👑 VIP (فيلم حصري)', callback_data: 'publish_vip' }],
+                    [{ text: '🔙 رجوع', callback_data: 'cancel' }]
                 ]
             }
         });
@@ -161,14 +183,12 @@ bot.on('callback_query', async (query) => {
             await bot.editMessageText(prompt, { chat_id: chatId, message_id: msgId });
         }
     }
-
-    await bot.answerCallbackQuery(query.id);
 });
 
 // معالجة الرسائل النصية والصور
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id.toString();
-    if (chatId !== config.ADMIN_ID.toString()) return;
+    if (!isAdmin(chatId)) return;
 
     const state = userStates.get(chatId);
     if (!state) return;
