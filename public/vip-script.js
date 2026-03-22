@@ -5,6 +5,7 @@
 
 const App = {
     data: [],
+    groupedData: {},
     favorites: [],
     currentFilter: 'all',
     currentGenre: 'all',
@@ -13,6 +14,7 @@ const App = {
     user: null,
     currentItem: null,
     playerInstance: null,
+    state: {}, // ✅ تم إضافة كائن state
 
     elements: {
         grid: document.getElementById('moviesGrid'),
@@ -216,7 +218,11 @@ const App = {
     groupDataByGenre: () => {
         const grouped = {};
         App.data.forEach(item => {
-            const genre = item.genre || 'أخرى';
+            // ✅ معالجة التصنيف المفقود
+            let genre = item.genre;
+            if (!genre || genre === '') {
+                genre = 'مضاف حديثاً';
+            }
             if (!grouped[genre]) grouped[genre] = [];
             grouped[genre].push(item);
         });
@@ -238,7 +244,8 @@ const App = {
         }
         const grouped = {};
         filtered.forEach(item => {
-            const genre = item.genre || 'أخرى';
+            let genre = item.genre;
+            if (!genre || genre === '') genre = 'مضاف حديثاً';
             if (!grouped[genre]) grouped[genre] = [];
             grouped[genre].push(item);
         });
@@ -371,7 +378,8 @@ const App = {
             'تاريخي': 'fa-solid fa-landmark',
             'عائلي': 'fa-solid fa-family',
             'رياضة': 'fa-solid fa-futbol',
-            'أخرى': 'fa-solid fa-tv'
+            'أخرى': 'fa-solid fa-tv',
+            'مضاف حديثاً': 'fa-solid fa-clock'
         };
         return icons[genre] || 'fa-solid fa-clapperboard';
     },
@@ -469,7 +477,8 @@ const App = {
         }
         const grouped = {};
         favs.forEach(item => {
-            const genre = item.genre || 'أخرى';
+            let genre = item.genre;
+            if (!genre || genre === '') genre = 'مضاف حديثاً';
             if (!grouped[genre]) grouped[genre] = [];
             grouped[genre].push(item);
         });
