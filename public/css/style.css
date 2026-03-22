@@ -1,48 +1,80 @@
-/* إعدادات عامة */
+/* إعدادات عامة - ألوان داكنة أكثر */
 :root {
-    --bg-color: #141414;
+    --bg-color: #111111; /* أسود أغمق */
     --primary-red: #E50914;
+    --card-bg: #1c1c1c; /* لون خلفية للكروت */
     --text-color: #FFFFFF;
-    --overlay: rgba(0, 0, 0, 0.7);
+    --gold: #FFD700;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-body { background-color: var(--bg-color); color: var(--text-color); overflow-x: hidden; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-color); overflow-x: hidden; padding-top: 70px; /* لإعطاء مساحة للبار الثابت */}
 
-/* شريط التنقل */
-.navbar { position: fixed; top: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; transition: background 0.3s; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
-.navbar.scrolled { background: var(--bg-color); }
-.logo { font-size: 28px; font-weight: bold; color: var(--primary-red); }
-.logo span { color: #fff; }
-.user-status { font-size: 14px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; }
-.user-status.vip-active { background: gold; color: black; font-weight: bold; }
+/* شريط التنقل - بتصميم مشابه للصورة */
+.navbar { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; transition: background 0.3s; background-color: var(--bg-color); border-bottom: 1px solid #333;}
+.logo { font-size: 24px; font-weight: bold; color: var(--text-color); }
+.logo span { color: var(--primary-red); }
+.user-status { font-size: 14px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; color: gold; font-weight: bold; }
+.user-status.vip-active { color: #00ff00; /* أخضر إذا كان مفعل */}
 
-/* البانر الرئيسي */
-.hero { position: relative; height: 70vh; background-size: cover; background-position: center; display: flex; align-items: flex-end; padding-bottom: 50px; }
-.hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, var(--bg-color) 0%, transparent 100%); }
-.hero-content { position: relative; z-index: 10; padding: 0 40px; max-width: 600px; }
-.hero h1 { font-size: 48px; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-.tags { margin-bottom: 20px; display: flex; gap: 10px; }
-.tag { padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
-.tag.vip { background: gold; color: black; }
-.tag.hd { border: 1px solid rgba(255,255,255,0.5); }
+/* الأزرار (Buttons) */
 .btn { padding: 10px 25px; font-size: 18px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; }
 .btn.play { background: white; color: black; }
 .btn.play:hover { background: rgba(255,255,255,0.7); }
 
-/* الأقسام والكروت */
-.content-sections { padding: 20px 40px; }
-.section-title { font-size: 20px; margin-bottom: 15px; margin-top: 30px; }
-.vip-title { color: gold; }
-.slider-container { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: none; }
-.slider-container::-webkit-scrollbar { display: none; }
-.movie-card { min-width: 200px; height: 300px; position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.3s; }
-.movie-card:hover { transform: scale(1.05); z-index: 10; }
-.movie-card img { width: 100%; height: 100%; object-fit: cover; }
-.movie-info { position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
-.movie-title { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+/* إزالة البانر الرئيسي لتوفير مساحة */
+.hero { display: none; }
 
-/* قفل الـ VIP */
-.locked-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; color: gold; font-weight: bold; text-align: center; padding: 10px;}
+/* الأقسام وشبكة العرض العمودية -Grid View- */
+.content-sections { padding: 20px; }
+.section-title { font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid var(--primary-red); display: inline-block; padding-bottom: 5px;}
+.vip-title { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* تحويل السلايدر لشبكة عمودية */
+.grid-container { 
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* عمودين للهواتف */
+    gap: 15px; 
+    padding-bottom: 20px; 
+}
+
+/* عمود واحد للهواتف الصغيرة جداً */
+@media (max-width: 320px) {
+    .grid-container { grid-template-columns: 1fr; }
+}
+
+/* التصميم الجديد للكروت -يشبه الصورة- */
+.movie-card { 
+    position: relative; 
+    border-radius: 8px; 
+    overflow: hidden; 
+    cursor: pointer; 
+    transition: transform 0.3s, box-shadow 0.3s; 
+    background-color: var(--card-bg); 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+.movie-card:hover { transform: scale(1.05); z-index: 10; box-shadow: 0 10px 15px rgba(229, 9, 20, 0.4); }
+.movie-card img { width: 100%; height: auto; object-fit: cover; display: block; }
+
+/* شريط العنوان أسفل الصورة */
+.movie-info { 
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    padding: 10px; 
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); 
+    color: white; 
+}
+.movie-title { font-size: 14px; font-weight: bold; }
+
+/* قفل الـ VIP المحدث */
+.locked-overlay { 
+    position: absolute; 
+    top:0; left:0; width:100%; height:100%; 
+    background: rgba(0,0,0,0.8); 
+    display: flex; flex-direction: column; justify-content: center; align-items: center; 
+    color: var(--gold); font-weight: bold; text-align: center; padding: 10px;
+}
 
 /* مشغل الفيديو (Modal) */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: flex; flex-direction: column; }
