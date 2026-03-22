@@ -1,32 +1,52 @@
 /**
- * 🚀 StreamFlix - Professional Video Streaming Platform
- * 🎬 Universal Player: Supports YouTube & Direct MP4 & M3U8 Links (V5.1 - Categorized)
+ * 🚀 StreamFlix Pro - Advanced Frontend Application
+ * 🎬 Universal Player with Advanced Features
+ * 👑 Version: 6.0 - Professional Edition
  */
 
 const App = {
     state: {
         data: [],
-        favorites: JSON.parse(localStorage.getItem('streamflix_favorites')) || [],
+        filteredData: [],
+        favorites: [],
         currentCategory: 'all',
+        currentGenre: 'all',
         currentSearchQuery: '',
         isLoading: false,
-        currentVideoLink: null
+        currentVideoLink: null,
+        currentPage: 1,
+        hasMore: true,
+        userId: localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     },
 
     elements: {
         grid: document.getElementById('moviesGrid'),
         skeleton: document.getElementById('skeletonLoader'),
         noResults: document.getElementById('noResults'),
+        loadMoreContainer: document.getElementById('loadMoreContainer'),
+        loadMoreBtn: document.getElementById('loadMoreBtn'),
         navbar: document.getElementById('navbar'),
         heroBanner: document.getElementById('heroBanner'),
         heroTitle: document.getElementById('heroTitle'),
+        heroYear: document.getElementById('heroYear'),
+        heroQuality: document.getElementById('heroQuality'),
+        heroDuration: document.getElementById('heroDuration'),
+        heroRating: document.getElementById('heroRating'),
         heroDescription: document.getElementById('heroDescription'),
         heroPlayBtn: document.getElementById('heroPlayBtn'),
         heroInfoBtn: document.getElementById('heroInfoBtn'),
+        heroFavBtn: document.getElementById('heroFavBtn'),
         detailsModal: document.getElementById('detailsModal'),
         detailsImg: document.getElementById('detailsImg'),
         detailsTitle: document.getElementById('detailsTitle'),
-        detailsCategory: document.getElementById('detailsCategory'),
+        detailsQuality: document.getElementById('detailsQuality'),
+        detailsYear: document.getElementById('detailsYear'),
+        detailsDuration: document.getElementById('detailsDuration'),
+        detailsDirector: document.getElementById('detailsDirector'),
+        detailsCast: document.getElementById('detailsCast'),
+        detailsRating: document.getElementById('detailsRating'),
+        detailsViews: document.getElementById('detailsViews'),
+        detailsDescription: document.getElementById('detailsDescription'),
         detailsPlayBtn: document.getElementById('detailsPlayBtn'),
         detailsFavBtn: document.getElementById('detailsFavBtn'),
         closeDetailsBtn: document.getElementById('closeDetailsBtn'),
@@ -38,25 +58,54 @@ const App = {
         searchInput: document.getElementById('searchInput'),
         mobileMenuBtn: document.getElementById('mobileMenuBtn'),
         mobileMenu: document.getElementById('mobileMenu'),
-        toast: document.getElementById('toastNotification')
+        closeMobileMenu: document.getElementById('closeMobileMenu'),
+        toast: document.getElementById('toastNotification'),
+        announcementBar: document.getElementById('announcementBar'),
+        announcementText: document.getElementById('announcementText'),
+        closeAnnouncement: document.getElementById('closeAnnouncement'),
+        categoryTabs: document.querySelectorAll('.cat-tab'),
+        loadingOverlay: document.getElementById('loadingOverlay')
     },
 
     playerInstance: null,
 
     init: async () => {
+        // Store user ID
+        if (!localStorage.getItem('userId')) {
+            localStorage.setItem('userId', App.state.userId);
+        } else {
+            App.state.userId = localStorage.getItem('userId');
+        }
+        
         App.setupEventListeners();
         App.setupScrollEffect();
+        await App.loadFavorites();
+        await App.fetchAnnouncements();
         await App.fetchData();
+        
+        // Hide loading overlay
+        setTimeout(() => {
+            if (App.elements.loadingOverlay) {
+                App.elements.loadingOverlay.classList.add('hide');
+                setTimeout(() => {
+                    App.elements.loadingOverlay.style.display = 'none';
+                }, 500);
+            }
+        }, 1000);
     },
 
     setupEventListeners: () => {
+        // Modal close buttons
         App.elements.closeDetailsBtn?.addEventListener('click', () => App.closeDetails());
         App.elements.closePlayerBtn?.addEventListener('click', () => App.closePlayer());
+        App.elements.closeAnnouncement?.addEventListener('click', () => App.closeAnnouncement());
         
+        // Modal backdrop click
         App.elements.detailsModal?.addEventListener('click', (e) => {
             if (e.target === App.elements.detailsModal) App.closeDetails();
         });
         
+        // Play overlay
         App.elements.detailsPlayOverlay?.addEventListener('click', () => {
             const currentItem = App.state.currentItem;
             if (currentItem) {
@@ -65,8 +114,13 @@ const App = {
             }
         });
         
+        // Mobile menu
         App.elements.mobileMenuBtn?.addEventListener('click', () => {
             App.elements.mobileMenu?.classList.toggle('active');
+        });
+        
+        App.elements.closeMobileMenu?.addEventListener('click', () => {
+            App.elements.mobileMenu?.classList.remove('active');
         });
         
         document.addEventListener('click', (e) => {
@@ -77,6 +131,7 @@ const App = {
             }
         });
         
+        // Search with debounce
         let searchTimeout;
         App.elements.searchInput?.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
@@ -85,6 +140,7 @@ const App = {
             }, 300);
         });
         
+        // Navigation buttons
         document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const filter = btn.dataset.filter;
@@ -95,6 +151,26 @@ const App = {
                 }
                 App.elements.mobileMenu?.classList.remove('active');
             });
+        });
+        
+        // Category tabs
+        App.elements.categoryTabs?.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const genre = tab.dataset.genre;
+                App.filterByGenre(genre, tab);
+            });
+        });
+        
+        // Load more button
+        App.elements.loadMoreBtn?.addEventListener('click', () => {
+            App.loadMore();
+        });
+        
+        // Hero favorite button
+        App.elements.heroFavBtn?.addEventListener('click', () => {
+            if (App.state.currentHeroItem) {
+                App.toggleFavorite(App.state.currentHeroItem);
+            }
         });
     },
 
@@ -110,29 +186,111 @@ const App = {
         return videoDiv;
     },
 
-    fetchData: async () => {
+    fetchData: async (reset = true) => {
         try {
-            App.state.isLoading = true;
-            const res = await fetch('/api/content');
+            if (reset) {
+                App.state.isLoading = true;
+                App.state.currentPage = 1;
+                App.state.hasMore = true;
+                if (App.elements.skeleton) App.elements.skeleton.style.display = 'grid';
+                if (App.elements.grid) App.elements.grid.style.display = 'none';
+            }
+            
+            const params = new URLSearchParams({
+                page: App.state.currentPage,
+                limit: 20
+            });
+            
+            if (App.state.currentCategory !== 'all' && App.state.currentCategory !== 'favorites') {
+                params.append('category', App.state.currentCategory);
+            }
+            
+            if (App.state.currentGenre !== 'all') {
+                params.append('genre', App.state.currentGenre);
+            }
+            
+            if (App.state.currentSearchQuery) {
+                params.append('search', App.state.currentSearchQuery);
+            }
+            
+            const res = await fetch(`/api/content?${params}`);
             const result = await res.json();
-            App.state.data = result.data || [];
             
-            // إخفاء التحميل وإظهار الشبكة
-            if (App.elements.skeleton) App.elements.skeleton.style.display = 'none';
-            if (App.elements.grid) App.elements.grid.style.display = 'block'; // تحويل لـ block لدعم الأقسام
-            
-            if (App.state.data.length > 0) {
-                App.renderHero(App.state.data[0]); // تشغيل البانر العلوي لأول فيلم
-                App.renderGrid(App.state.data);
-            } else {
-                App.showEmptyState();
+            if (result.status === 'success') {
+                if (reset) {
+                    App.state.data = result.data;
+                    App.state.filteredData = result.data;
+                } else {
+                    App.state.data = [...App.state.data, ...result.data];
+                    App.state.filteredData = App.state.data;
+                }
+                
+                App.state.hasMore = result.data.length === 20;
+                
+                if (App.state.data.length > 0) {
+                    if (reset && App.state.currentCategory !== 'favorites') {
+                        App.renderHero(App.state.data[0]);
+                    }
+                    App.renderGrid(App.state.filteredData);
+                    if (App.elements.loadMoreContainer) {
+                        App.elements.loadMoreContainer.style.display = App.state.hasMore ? 'block' : 'none';
+                    }
+                } else {
+                    App.showEmptyState();
+                }
             }
         } catch (error) {
-            if (App.elements.skeleton) {
-                App.elements.skeleton.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><h3>فشل الاتصال</h3></div>`;
-            }
+            console.error('Fetch error:', error);
+            App.showError('فشل الاتصال بالخادم');
         } finally {
-            App.state.isLoading = false;
+            if (reset) {
+                App.state.isLoading = false;
+                if (App.elements.skeleton) App.elements.skeleton.style.display = 'none';
+                if (App.elements.grid) App.elements.grid.style.display = 'block';
+            }
+        }
+    },
+
+    loadMore: () => {
+        if (!App.state.isLoading && App.state.hasMore) {
+            App.state.currentPage++;
+            App.fetchData(false);
+        }
+    },
+
+    fetchAnnouncements: async () => {
+        try {
+            const res = await fetch('/api/announcements');
+            const result = await res.json();
+            if (result.status === 'success' && result.data.length > 0) {
+                const announcement = result.data[0];
+                if (App.elements.announcementText) {
+                    App.elements.announcementText.textContent = announcement.message;
+                }
+                if (App.elements.announcementBar) {
+                    App.elements.announcementBar.style.display = 'flex';
+                }
+            }
+        } catch (error) {
+            console.error('Announcement error:', error);
+        }
+    },
+
+    closeAnnouncement: () => {
+        if (App.elements.announcementBar) {
+            App.elements.announcementBar.style.display = 'none';
+        }
+    },
+
+    loadFavorites: async () => {
+        try {
+            const res = await fetch(`/api/user/${App.state.userId}/favorites`);
+            const result = await res.json();
+            if (result.status === 'success') {
+                App.state.favorites = result.data;
+            }
+        } catch (error) {
+            console.error('Favorites error:', error);
         }
     },
 
@@ -142,90 +300,166 @@ const App = {
         return match ? match[1] : null;
     },
 
-    // 🌟 جلب الصورة (يدعم البوستر المرفوع أو صورة يوتيوب)
     getThumbnail: (item) => {
         if (item && item.poster) {
-            return `/api/image/${item.poster}`; // الصورة المرفوعة من تليجرام
+            return `/api/image/${item.poster}`;
         }
         const url = typeof item === 'string' ? item : (item ? item.link : '');
         const ytId = App.extractYTId(url);
         if (ytId) {
             return `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
         }
-        return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000&auto=format&fit=crop'; 
+        return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000&auto=format&fit=crop';
     },
 
     renderHero: (item) => {
         const imgUrl = App.getThumbnail(item);
         if (App.elements.heroBanner) App.elements.heroBanner.style.backgroundImage = `url('${imgUrl}')`;
-        if (App.elements.heroTitle) App.elements.heroTitle.innerText = item.title;
+        if (App.elements.heroTitle) App.elements.heroTitle.innerText = item.titleAr || item.title;
+        if (App.elements.heroYear) App.elements.heroYear.innerHTML = `<i class="fa-regular fa-calendar"></i> ${item.year || '2024'}`;
+        if (App.elements.heroQuality) App.elements.heroQuality.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${item.quality || 'HD'}`;
+        if (App.elements.heroDuration) App.elements.heroDuration.innerHTML = `<i class="fa-regular fa-clock"></i> ${item.duration || '120 دقيقة'}`;
+        if (App.elements.heroRating) App.elements.heroRating.innerText = item.rating || '4.5';
+        if (App.elements.heroDescription) App.elements.heroDescription.innerText = item.description || 'لا يوجد وصف متاح';
+        
+        const isFav = App.state.favorites.some(f => f._id === item._id);
+        if (App.elements.heroFavBtn) {
+            App.elements.heroFavBtn.innerHTML = isFav ? '<i class="fa-solid fa-heart"></i><span>في قائمتي</span>' : '<i class="fa-regular fa-heart"></i><span>أضف لقائمتي</span>';
+        }
+        
         if (App.elements.heroPlayBtn) App.elements.heroPlayBtn.onclick = () => App.playVideo(item.link, item.title);
         if (App.elements.heroInfoBtn) App.elements.heroInfoBtn.onclick = () => App.openDetails(item);
+        
         App.state.currentHeroItem = item;
     },
 
-    // 🌟 التعديل الجديد: عرض الأفلام كأقسام مفصولة (أكشن، دراما..)
     renderGrid: (items) => {
         if (!App.elements.grid) return;
         App.elements.grid.innerHTML = '';
-        if (items.length === 0) return App.showEmptyState();
+        
+        if (items.length === 0) {
+            App.showEmptyState();
+            return;
+        }
         
         if (App.elements.noResults) App.elements.noResults.style.display = 'none';
-        if (App.elements.grid) App.elements.grid.style.display = 'block';
-
-        // تجميع الأفلام حسب التصنيف
-        const grouped = items.reduce((acc, item) => {
-            const g = item.genre || 'أخرى';
-            if (!acc[g]) acc[g] = [];
-            acc[g].push(item);
-            return acc;
-        }, {});
-
-        // رسم كل قسم
-        for (const [genre, genreItems] of Object.entries(grouped)) {
-            const section = document.createElement('div');
-            section.className = 'genre-section';
-            section.style.marginBottom = '40px';
+        if (App.elements.grid) App.elements.grid.style.display = 'grid';
+        
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.onclick = () => App.openDetails(item);
             
-            section.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 10px;">
-                    <h2 style="color: #fff; font-size: 1.2rem; border-right: 4px solid #e50914; padding-right: 10px; margin: 0;">${genre}</h2>
+            const imgUrl = App.getThumbnail(item);
+            const title = item.titleAr || item.title;
+            
+            card.innerHTML = `
+                <img src="${imgUrl}" loading="lazy" alt="${title}" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop'">
+                <div class="card-overlay">
+                    <div class="play-icon-circle"><i class="fa-solid fa-play"></i></div>
+                    <h3>${App.truncateText(title, 30)}</h3>
                 </div>
-                <div class="genre-row" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 0 10px;"></div>
             `;
-            
-            const row = section.querySelector('.genre-row');
-            
-            genreItems.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'movie-card';
-                card.onclick = () => App.openDetails(item);
+            App.elements.grid.appendChild(card);
+        });
+    },
 
-                card.innerHTML = `
-                    <img src="${App.getThumbnail(item)}" loading="lazy" alt="${item.title}" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop'">
-                    <div class="card-overlay">
-                        <div class="play-icon-circle"><i class="fa-solid fa-play"></i></div>
-                        <h3>${App.truncateText(item.title, 30)}</h3>
-                    </div>
-                `;
-                row.appendChild(card);
-            });
-            
-            App.elements.grid.appendChild(section);
+    filterByGenre: (genre, activeTab) => {
+        App.state.currentGenre = genre;
+        
+        // Update active tab
+        App.elements.categoryTabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
+        if (activeTab) activeTab.classList.add('active');
+        
+        App.filterAndRender();
+    },
+
+    filterContent: (type, btn) => {
+        App.updateNavButtons(btn);
+        App.state.currentCategory = type;
+        App.state.currentGenre = 'all';
+        App.state.currentSearchQuery = '';
+        
+        // Reset category tabs
+        App.elements.categoryTabs.forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.genre === 'all') tab.classList.add('active');
+        });
+        
+        if (App.elements.searchInput) App.elements.searchInput.value = '';
+        
+        if (type === 'favorites') {
+            App.renderGrid(App.state.favorites);
+            if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
+        } else {
+            App.state.currentPage = 1;
+            App.fetchData(true);
         }
     },
 
-    truncateText: (text, maxLength) => {
-        return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
+    filterAndRender: () => {
+        if (App.state.currentCategory === 'favorites') {
+            let filtered = App.state.favorites;
+            if (App.state.currentGenre !== 'all') {
+                filtered = filtered.filter(i => i.genre === App.state.currentGenre);
+            }
+            if (App.state.currentSearchQuery) {
+                filtered = filtered.filter(i => 
+                    (i.titleAr || i.title).toLowerCase().includes(App.state.currentSearchQuery.toLowerCase())
+                );
+            }
+            App.renderGrid(filtered);
+            if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
+        } else {
+            App.state.currentPage = 1;
+            App.fetchData(true);
+        }
+    },
+
+    showFavorites: (btn) => {
+        App.updateNavButtons(btn);
+        App.state.currentCategory = 'favorites';
+        App.state.currentGenre = 'all';
+        App.state.currentSearchQuery = '';
+        
+        if (App.elements.searchInput) App.elements.searchInput.value = '';
+        
+        App.renderGrid(App.state.favorites);
+        if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
+    },
+
+    handleSearch: (query) => {
+        App.state.currentSearchQuery = query;
+        App.state.currentPage = 1;
+        
+        if (App.state.currentCategory === 'favorites') {
+            const filtered = App.state.favorites.filter(i => 
+                (i.titleAr || i.title).toLowerCase().includes(query.toLowerCase())
+            );
+            App.renderGrid(filtered);
+        } else {
+            App.fetchData(true);
+        }
     },
 
     openDetails: (item) => {
         const isFav = App.state.favorites.some(f => f._id === item._id);
+        
         if (App.elements.detailsImg) App.elements.detailsImg.src = App.getThumbnail(item);
-        if (App.elements.detailsTitle) App.elements.detailsTitle.innerText = item.title;
+        if (App.elements.detailsTitle) App.elements.detailsTitle.innerText = item.titleAr || item.title;
+        if (App.elements.detailsQuality) App.elements.detailsQuality.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${item.quality || 'HD'}`;
+        if (App.elements.detailsYear) App.elements.detailsYear.innerHTML = `<i class="fa-regular fa-calendar"></i> ${item.year || '2024'}`;
+        if (App.elements.detailsDuration) App.elements.detailsDuration.innerHTML = `<i class="fa-regular fa-clock"></i> ${item.duration || '120 دقيقة'}`;
+        if (App.elements.detailsDirector) App.elements.detailsDirector.innerHTML = `<i class="fa-solid fa-user"></i> المخرج: ${item.director || 'غير معروف'}`;
+        if (App.elements.detailsCast) App.elements.detailsCast.innerHTML = `<i class="fa-solid fa-users"></i> الممثلين: ${item.cast?.join(', ') || 'غير معروف'}`;
+        if (App.elements.detailsRating) App.elements.detailsRating.innerText = item.rating || '4.0';
+        if (App.elements.detailsViews) App.elements.detailsViews.innerHTML = `<i class="fa-regular fa-eye"></i> ${item.views || 0} مشاهدة`;
+        if (App.elements.detailsDescription) App.elements.detailsDescription.innerText = item.description || 'لا يوجد وصف متاح';
         
         if (App.elements.detailsFavBtn) {
-            App.elements.detailsFavBtn.innerHTML = isFav ? '<i class="fa-solid fa-check"></i><span>في قائمتي</span>' : '<i class="fa-solid fa-plus"></i><span>أضف لقائمتي</span>';
+            App.elements.detailsFavBtn.innerHTML = isFav ? '<i class="fa-solid fa-check"></i><span>في قائمتي</span>' : '<i class="fa-regular fa-heart"></i><span>أضف لقائمتي</span>';
             App.elements.detailsFavBtn.onclick = () => App.toggleFavorite(item);
         }
         
@@ -247,17 +481,44 @@ const App = {
         App.state.currentItem = null;
     },
 
-    toggleFavorite: (item) => {
-        const index = App.state.favorites.findIndex(f => f._id === item._id);
-        let message = index > -1 ? 'تمت إزالة من قائمتي' : 'تمت الإضافة إلى قائمتي';
+    toggleFavorite: async (item) => {
+        const isFav = App.state.favorites.some(f => f._id === item._id);
+        const action = isFav ? 'remove' : 'add';
         
-        if (index > -1) App.state.favorites.splice(index, 1);
-        else App.state.favorites.push(item);
+        try {
+            const res = await fetch(`/api/user/${App.state.userId}/favorites`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contentId: item._id, action })
+            });
             
-        localStorage.setItem('streamflix_favorites', JSON.stringify(App.state.favorites));
-        App.showToast(message, index === -1);
-        App.openDetails(item); 
-        if (App.state.currentCategory === 'favorites') App.renderGrid(App.state.favorites);
+            const result = await res.json();
+            if (result.status === 'success') {
+                if (action === 'add') {
+                    App.state.favorites.push(item);
+                    App.showToast('تمت الإضافة إلى قائمتي', true);
+                } else {
+                    App.state.favorites = App.state.favorites.filter(f => f._id !== item._id);
+                    App.showToast('تمت الإزالة من قائمتي', false);
+                }
+                
+                // Update UI
+                if (App.state.currentHeroItem && App.state.currentHeroItem._id === item._id && App.elements.heroFavBtn) {
+                    App.elements.heroFavBtn.innerHTML = action === 'add' ? '<i class="fa-solid fa-heart"></i><span>في قائمتي</span>' : '<i class="fa-regular fa-heart"></i><span>أضف لقائمتي</span>';
+                }
+                
+                if (App.state.currentItem && App.state.currentItem._id === item._id && App.elements.detailsFavBtn) {
+                    App.elements.detailsFavBtn.innerHTML = action === 'add' ? '<i class="fa-solid fa-check"></i><span>في قائمتي</span>' : '<i class="fa-regular fa-heart"></i><span>أضف لقائمتي</span>';
+                }
+                
+                if (App.state.currentCategory === 'favorites') {
+                    App.renderGrid(App.state.favorites);
+                }
+            }
+        } catch (error) {
+            console.error('Favorite error:', error);
+            App.showToast('حدث خطأ، حاول مرة أخرى', false);
+        }
     },
 
     showToast: (message, isSuccess = true) => {
@@ -271,7 +532,10 @@ const App = {
         setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
-    // 🌟 مشغل الفيديو (يدعم M3U8, MP4, ويوتيوب)
+    showError: (message) => {
+        App.showToast(message, false);
+    },
+
     playVideo: (url, title) => {
         App.state.currentVideoLink = url;
         document.body.style.overflow = 'hidden';
@@ -282,15 +546,26 @@ const App = {
         if (!videoElement) return;
         
         const ytId = App.extractYTId(url);
-        const isM3U8 = url.toLowerCase().includes('.m3u8');
+        const isM3U8 = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.m3u');
 
         const playerConfig = {
-            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-            autoplay: true
+            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'],
+            autoplay: true,
+            keyboard: { focused: true, global: true },
+            tooltips: { controls: true, seek: true },
+            speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] },
+            quality: { default: 'hd', options: ['hd', 'sd'] }
         };
 
         if (ytId) {
-            playerConfig.youtube = { noCookie: false, rel: 0, showinfo: 0, iv_load_policy: 3, modestbranding: 1, origin: window.location.origin };
+            playerConfig.youtube = { 
+                noCookie: false, 
+                rel: 0, 
+                showinfo: 0, 
+                iv_load_policy: 3, 
+                modestbranding: 1, 
+                origin: window.location.origin 
+            };
             App.playerInstance = new Plyr(videoElement, playerConfig);
             App.playerInstance.source = {
                 type: 'video',
@@ -299,7 +574,11 @@ const App = {
         } else {
             App.playerInstance = new Plyr(videoElement, playerConfig);
             if (isM3U8 && typeof Hls !== 'undefined' && Hls.isSupported()) {
-                const hls = new Hls();
+                const hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
                 hls.loadSource(url);
                 hls.attachMedia(videoElement);
                 App.playerInstance.hls = hls;
@@ -315,31 +594,15 @@ const App = {
         document.body.style.overflow = 'auto';
         if (App.playerInstance) {
             if (App.playerInstance.hls) App.playerInstance.hls.destroy();
-            try { App.playerInstance.stop(); App.playerInstance.destroy(); } catch (e) {}
+            try { 
+                App.playerInstance.stop(); 
+                App.playerInstance.destroy(); 
+            } catch (e) {}
             App.playerInstance = null;
         }
         if (App.elements.videoContainer) App.elements.videoContainer.innerHTML = '';
         if (App.elements.playerModal) App.elements.playerModal.style.display = 'none';
         App.state.currentVideoLink = null;
-    },
-
-    filterContent: (type, btn) => {
-        App.updateNavButtons(btn);
-        App.state.currentCategory = type;
-        if (type === 'all') App.renderGrid(App.state.data);
-        else App.renderGrid(App.state.data.filter(i => i.category === type));
-    },
-
-    showFavorites: (btn) => {
-        App.updateNavButtons(btn);
-        App.state.currentCategory = 'favorites';
-        App.renderGrid(App.state.favorites);
-    },
-
-    handleSearch: (query) => {
-        const q = query.toLowerCase().trim();
-        const dataSource = App.state.currentCategory === 'favorites' ? App.state.favorites : App.state.data;
-        App.renderGrid(q === '' ? dataSource : dataSource.filter(i => i.title.toLowerCase().includes(q)));
     },
 
     updateNavButtons: (activeBtn) => {
@@ -350,6 +613,11 @@ const App = {
     showEmptyState: () => {
         if (App.elements.grid) App.elements.grid.style.display = 'none';
         if (App.elements.noResults) App.elements.noResults.style.display = 'block';
+        if (App.elements.loadMoreContainer) App.elements.loadMoreContainer.style.display = 'none';
+    },
+
+    truncateText: (text, maxLength) => {
+        return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
     },
 
     setupScrollEffect: () => {
@@ -361,4 +629,5 @@ const App = {
     }
 };
 
+// Initialize app
 document.addEventListener('DOMContentLoaded', () => App.init());
