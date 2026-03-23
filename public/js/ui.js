@@ -1,4 +1,3 @@
-// public/js/ui.js
 const UI = {
     playerInstance: null,
     isUserVIP: false,
@@ -54,6 +53,7 @@ const UI = {
         });
     },
 
+    // دالة لاستخراج ID اليوتيوب إذا كان الرابط من يوتيوب
     extractYTId(url) {
         const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
         const match = url.match(regex);
@@ -68,8 +68,8 @@ const UI = {
 
         const videoContainer = document.querySelector('.video-wrapper');
         
-        // بناء عنصر الفيديو من الصفر في كل مرة لضمان عمل Plyr
-        videoContainer.innerHTML = '<video id="plyr-video" playsinline controls crossorigin></video>';
+        // مسح القديم وبناء جديد (بدون crossorigin لتجنب حظر السيرفرات الخارجية)
+        videoContainer.innerHTML = '<video id="plyr-video" playsinline controls></video>';
         const videoEl = document.getElementById('plyr-video');
 
         const ytId = this.extractYTId(url);
@@ -83,19 +83,26 @@ const UI = {
                 sources: [{ src: ytId, provider: 'youtube' }]
             };
         } else if (isM3U8 && typeof Hls !== 'undefined' && Hls.isSupported()) {
-            // 2. تشغيل روابط البث والسيرفرات الخارجية (M3U8)
+            // 2. تشغيل روابط البث المباشر والسيرفرات (M3U8)
             const hls = new Hls();
             hls.loadSource(url);
             hls.attachMedia(videoEl);
             this.playerInstance = new Plyr(videoEl, { autoplay: true });
             this.playerInstance.hls = hls; // حفظه لإغلاقه لاحقاً
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                videoEl.play().catch(() => {});
+                const playPromise = videoEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => { console.log("متصفح الجوال يمنع التشغيل التلقائي"); });
+                }
             });
         } else {
-            // 3. تشغيل روابط MP4 المباشرة
-            videoEl.src = url;
+            // 3. تشغيل الروابط المباشرة العادية (MP4 وغيرها)
             this.playerInstance = new Plyr(videoEl, { autoplay: true });
+            this.playerInstance.source = {
+                type: 'video',
+                title: title,
+                sources: [{ src: url }]
+            };
         }
     },
 
