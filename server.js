@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const https = require('https'); // استدعاء مكتبة النبض
 const connectDB = require('./config/db');
 const env = require('./config/env');
 
@@ -32,4 +33,17 @@ app.get('*', (req, res) => {
 // تشغيل السيرفر
 app.listen(env.PORT, () => {
     console.log(`🚀 [Server] Running on port ${env.PORT}`);
+
+    // 6. نظام النبض (Keep-Alive) لمنع سيرفر Render المجاني من النوم
+    const APP_URL = 'https://aflam-ehhy.onrender.com'; 
+    
+    setInterval(() => {
+        https.get(APP_URL, (resp) => {
+            if (resp.statusCode === 200) {
+                console.log('✅ نبض السيرفر: السيرفر مستيقظ والبوت يعمل');
+            }
+        }).on("error", (err) => {
+            console.log("❌ خطأ في النبض: " + err.message);
+        });
+    }, 14 * 60 * 1000); // إرسال طلب كل 14 دقيقة
 });
