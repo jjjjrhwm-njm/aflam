@@ -1,3 +1,4 @@
+// public/js/ui.js
 const UI = {
     playerInstance: null,
     isUserVIP: false,
@@ -14,7 +15,9 @@ const UI = {
         }
     },
 
-    renderHero(movie) {},
+    renderHero(movie) {
+        // يمكن تفعيلها مستقبلاً لرسم بنر مميز
+    },
 
     renderMovies(movies, containerId, isVipSection = false) {
         const container = document.getElementById(containerId);
@@ -53,55 +56,57 @@ const UI = {
         });
     },
 
-    // دالة لاستخراج ID اليوتيوب إذا كان الرابط من يوتيوب
+    // دالة لاستخراج ID اليوتيوب
     extractYTId(url) {
         const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
         const match = url.match(regex);
         return match ? match[1] : null;
     },
 
-    // المشغل الذكي Plyr
+    // المشغل الذكي المعدل ليدعم المخزن والروابط الخارجية
     openPlayer(url, title) {
         document.getElementById('playerTitle').textContent = title;
         document.getElementById('playerModal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
 
         const videoContainer = document.querySelector('.video-wrapper');
-        
-        // مسح القديم وبناء جديد (بدون crossorigin لتجنب حظر السيرفرات الخارجية)
         videoContainer.innerHTML = '<video id="plyr-video" playsinline controls></video>';
         const videoEl = document.getElementById('plyr-video');
 
-        const ytId = this.extractYTId(url);
-        const isM3U8 = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.m3u');
+        // تتبع المسار: هل الرابط File ID من التلجرام أم رابط خارجي؟
+        let finalUrl = url;
+        if (!url.startsWith('http')) {
+            // إذا كان مجرد ID، نحوله لمسار البث من سيرفرنا
+            finalUrl = `/api/content/stream/${url}`;
+        }
+
+        const ytId = this.extractYTId(finalUrl);
+        const isM3U8 = finalUrl.toLowerCase().includes('.m3u8') || finalUrl.toLowerCase().includes('.m3u');
 
         if (ytId) {
-            // 1. تشغيل روابط يوتيوب
+            // 1. تشغيل يوتيوب
             this.playerInstance = new Plyr(videoEl, { autoplay: true });
             this.playerInstance.source = {
                 type: 'video',
                 sources: [{ src: ytId, provider: 'youtube' }]
             };
         } else if (isM3U8 && typeof Hls !== 'undefined' && Hls.isSupported()) {
-            // 2. تشغيل روابط البث المباشر والسيرفرات (M3U8)
+            // 2. تشغيل بث مباشر (M3U8)
             const hls = new Hls();
-            hls.loadSource(url);
+            hls.loadSource(finalUrl);
             hls.attachMedia(videoEl);
             this.playerInstance = new Plyr(videoEl, { autoplay: true });
-            this.playerInstance.hls = hls; // حفظه لإغلاقه لاحقاً
+            this.playerInstance.hls = hls;
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                const playPromise = videoEl.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => { console.log("متصفح الجوال يمنع التشغيل التلقائي"); });
-                }
+                videoEl.play().catch(e => console.log("التشغيل التلقائي محجوب"));
             });
         } else {
-            // 3. تشغيل الروابط المباشرة العادية (MP4 وغيرها)
+            // 3. تشغيل الروابط المباشرة (MP4) القادمة من المخزن أو المواقع
             this.playerInstance = new Plyr(videoEl, { autoplay: true });
             this.playerInstance.source = {
                 type: 'video',
                 title: title,
-                sources: [{ src: url }]
+                sources: [{ src: finalUrl }]
             };
         }
     },
@@ -110,7 +115,6 @@ const UI = {
         document.getElementById('playerModal').classList.add('hidden');
         document.body.style.overflow = 'auto';
         
-        // تدمير المشغل القديم بالكامل لمنع التعليق
         if (this.playerInstance) {
             if (this.playerInstance.hls) {
                 this.playerInstance.hls.destroy();
@@ -119,8 +123,9 @@ const UI = {
             this.playerInstance.destroy();
             this.playerInstance = null;
         }
-        document.querySelector('.video-wrapper').innerHTML = ''; // تنظيف الحاوية
+        document.querySelector('.video-wrapper').innerHTML = '';
     }
 };
 
+// مستمع الأحداث لزر الإغلاق
 document.getElementById('closePlayerBtn').addEventListener('click', () => UI.closePlayer());
