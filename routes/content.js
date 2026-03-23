@@ -1,3 +1,4 @@
+// routes/content.js
 const express = require('express');
 const router = express.Router();
 const Content = require('../models/Content');
@@ -17,7 +18,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// جلب المحتوى الحصري VIP
+// جلب المحتوى VIP
 router.get('/vip', async (req, res) => {
     try {
         const vipMovies = await Content.find({ isVIP: true }).sort({ createdAt: -1 });
@@ -27,17 +28,22 @@ router.get('/vip', async (req, res) => {
     }
 });
 
-// راوت سحب الصور من تلغرام باحترافية (بدون تقطيع)
+// تحويل فيلم من المخزن (تلجرام) إلى بث مباشر للتطبيق
+router.get('/stream/:fileId', async (req, res) => {
+    try {
+        const link = await bot.getFileLink(req.params.fileId);
+        res.redirect(link); // يوجه المشغل لرابط الفيديو الخام في تلجرام
+    } catch (error) {
+        res.status(500).send('Error streaming from storage');
+    }
+});
+
+// سحب صور البوستر
 router.get('/image/:fileId', async (req, res) => {
     try {
         const link = await bot.getFileLink(req.params.fileId);
-        const response = await axios({
-            method: 'GET',
-            url: link,
-            responseType: 'stream'
-        });
+        const response = await axios({ method: 'GET', url: link, responseType: 'stream' });
         res.setHeader('Content-Type', 'image/jpeg');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
         response.data.pipe(res);
     } catch (error) {
         res.status(500).send('Error loading image');
