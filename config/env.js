@@ -1,4 +1,3 @@
-// config/env.js
 require('dotenv').config();
 
 module.exports = {
@@ -6,5 +5,6 @@ module.exports = {
     MONGO_URI: process.env.MONGO_URI,
     BOT_TOKEN: process.env.BOT_TOKEN,
     ADMIN_ID: process.env.ADMIN_ID,
+    STORAGE_CHANNEL: '@nejm_njm', // قناتك التي ستكون المخزن
     SESSION_SECRET: process.env.SESSION_SECRET
 };
