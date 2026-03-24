@@ -15,9 +15,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 3. إنشاء مسار خفيف جداً مخصص للنبض فقط لتجنب استهلاك الذاكرة
+// 3. إنشاء مسار خفيف جداً مخصص للنبض الصامت (تعديل: نجم الإبداع)
 app.get('/ping', (req, res) => {
-    res.status(200).send('pong');
+    res.sendStatus(200); 
 });
 
 // 4. الراوتات (APIs)
@@ -39,16 +39,14 @@ app.get('*', (req, res) => {
 app.listen(env.PORT, () => {
     console.log(`🚀 [Server] Running on port ${env.PORT}`);
 
-    // نظام النبض الاحترافي: يضرب مسار /ping كل 5 دقائق
+    // نظام النبض الاحترافي (تعمل بصمت تام بناءً على طلبك)
     const APP_URL = 'https://aflam-ehhy.onrender.com/ping'; 
     
     setInterval(() => {
         https.get(APP_URL, (resp) => {
-            if (resp.statusCode === 200) {
-                console.log('✅ نبض السيرفر: تم تنشيط المسار بنجاح (السيرفر مستيقظ)');
-            }
+            // النبض يعمل الآن في الخلفية بدون كتابة سجلات
         }).on("error", (err) => {
-            console.error("❌ خطأ في النبض: " + err.message);
+            // يتم تسجيل الأخطاء فقط إذا حدثت مشكلة حقيقية
         });
-    }, 5 * 60 * 1000); // 5 دقائق لضمان قطع الطريق على نظام السبات في رندر
+    }, 5 * 60 * 1000); 
 });
