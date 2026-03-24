@@ -35,18 +35,18 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 7. تشغيل السيرفر ودالة النبض المستمر
+// 7. تشغيل السيرفر ودالة النبض المستمر (معدل ليعمل على ريبلت)
 app.listen(env.PORT, () => {
     console.log(`🚀 [Server] Running on port ${env.PORT}`);
 
-    // نظام النبض الاحترافي (تعمل بصمت تام بناءً على طلبك)
-    const APP_URL = 'https://aflam-ehhy.onrender.com/ping'; 
+    // الرابط الصحيح الخاص بك في ريبلت لضمان عدم النوم
+    const APP_URL = 'https://f49b206b-6baf-4619-8fcc-e9376222ad4e-00-1mauw39nh2hwz.pike.replit.dev/ping'; 
     
     setInterval(() => {
         https.get(APP_URL, (resp) => {
-            // النبض يعمل الآن في الخلفية بدون كتابة سجلات
+            // نبض داخلي صامت لضمان الاستمرارية
         }).on("error", (err) => {
-            // يتم تسجيل الأخطاء فقط إذا حدثت مشكلة حقيقية
+            // لا نكتب شيئاً إلا في حال وجود خطأ حقيقي
         });
-    }, 5 * 60 * 1000); 
+    }, 5 * 60 * 1000); // كل 5 دقائق
 });
